@@ -1,5 +1,5 @@
 """
-Module to obtain and extract relevant XML files from PubMed. 
+Module to obtain and extract relevant XML files from PubMed.
 
 Standalone usage:
 python getPapers.py <searchPMIDs path> <oa index path> <dest_dir> <baseURL>
@@ -12,81 +12,92 @@ import argparse
 
 import pandas as pd
 import wget
-import shutil 
+import shutil
 
-def getPapers(pubmed, paperIndex, searchResults, baseurlRemote, dest, download, extract, files=None):
+def getPapersPubmed(paperIndex, searchResults, baseurlRemote, dest, download, extract):
 	"""
 	Using the PMID list from a given PubMed search, query the open
-	access subset index to find the URL for each paper, and download to 
+	access subset index to find the URL for each paper, and download to
 	the destination directory.
 
-	Each URL downloads a tar.gz file which contains an .nxml file for the 
+	Each URL downloads a tar.gz file which contains an .nxml file for the
 	article fulltext, image files from the article, graphics for display
-	versions of equations or chemical schemes, supplementary data files, 
-	PDF if available, and converted video files. More information can 
+	versions of equations or chemical schemes, supplementary data files,
+	PDF if available, and converted video files. More information can
 	be found at https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/
 
 	parameters:
-		pubmed, str: whether or not files are being downloaded from 
-			PubMed based on the PMIDs from a previous search
 		paperIndex, df: dataframe made from oa_file_list.csv
 		searchResults, df: dataframe of PMIDs from a PubMed search,
 			made from the csv file downloaded after search
 		baseurlRemote, str: the base URL that must preceed the filenames
-			in paperIndex['filenames'] in order to use wget. 
-			For PubMed OA package files, the base URL is 
+			in paperIndex['filenames'] in order to use wget.
+			For PubMed OA package files, the base URL is
 			ftp://ftp.ncbi.nlm.nih.gov/pub/pmc
 		dest, str: the directory to download and unpack tar.gz files
 		download, str: t/f of whether to download new files
 		extract, str: t/f of whether to extract files after downloading
-		files, list of str: if pubmed=False and download=True, must 
-			provide a list of files to retrieve
 
-	returns: if pubmed=True, a df containing the PMID's and PMCID's of the relevant papers
-		else: returns None
+	returns: a df containing the PMID's and PMCID's of the relevant papers
 	"""
-	if pubmed.lower() in ['t','true']:
-		# select only the rows that pertain to our search
-		print('===> Filtering open access papers by PubMed search results <===')
-		paperIndexSearch = paperIndex.loc[paperIndex['PMID'].isin(searchResults['PMID'])]
-	 
-		# make the filename column into a list for easier use
-		filenames = paperIndexSearch['filename'].tolist()
+	# select only the rows that pertain to our search
+	print('===> Filtering open access papers by PubMed search results <===')
+	paperIndexSearch = paperIndex.loc[paperIndex['PMID'].isin(searchResults['PMID'])]
 
-	else:
-		filenames = files 
+	# make the filename column into a list for easier use
+	filenames = paperIndexSearch['filename'].tolist()
 
 	# iterate through filename list and wget each one
 	if download.lower() in ['t','true']:
 		downloadFiles(filenames, baseurlRemote, dest)
-	
+
 	# extract all tar.gz files in dest
 	if extract.lower() in ['t','true']:
 		extract_all_targz(dest, dest)
-	
-	if pubmed.lower() in ['t','true']:
-		# make df with PMCID and PMID
-		print('===> Making ID dataframe <===')
-		IDnums = pd.concat([paperIndexSearch['PMCID'],paperIndexSearch['PMID']], axis=1)
-		IDnums = IDnums.astype({'PMID':'Int64'})
 
-		print('Done!')
-		return IDnums
-	
-	else: return None 
-def downloadFiles(filenames, baseurlRemote, dest):
+	# make df with PMCID and PMID
+	print('===> Making ID dataframe <===')
+	IDnums = pd.concat([paperIndexSearch['PMCID'],paperIndexSearch['PMID']], axis=1)
+	IDnums = IDnums.astype({'PMID':'Int64'})
+
+	print('Done!')
+	return IDnums
+
+
+def getPapersElsewhere(files, baseurlRemote, dest, download, extract):
 	"""
-	Uses the python wget module to download files form source. 
-	
+	Download and extract a list of files from a non-PubMed remote source.
+
 	parameters:
-		filenames, list of str: list of files to wget	
+		files, list of str: a list of files to get and extract
 		baseurlRemote, str: the base URL that must preceed the filenames
-			in paperIndex['filenames'] in order to use wget. 
-			For PubMed OA package files, the base URL is 
+			in paperIndex['filenames'] in order to use wget.
+			For PubMed OA package files, the base URL is
 			ftp://ftp.ncbi.nlm.nih.gov/pub/pmc
 		dest, str: the directory to download and unpack tar.gz files
+		download, str: t/f of whether to download new files
+		extract, str: t/f of whether to extract files after downloading
 	"""
-	print('===> Wgetting files from PubMed <==')
+	# iterate through filename list and wget each one
+	if download.lower() in ['t','true']:
+		downloadFiles(files, baseurlRemote, dest)
+
+	# extract all tar.gz files in dest
+	if extract.lower() in ['t','true']:
+		extract_all_targz(dest, dest)
+
+
+def downloadFiles(filenames, baseurlRemote, dest):
+	"""
+	Uses the python wget module to download files form source.
+
+	parameters:
+		filenames, list of str: list of files to wget
+		baseurlRemote, str: the base URL that must preceed the filenames
+			in paperIndex['filenames'] in order to use wget
+		dest, str: the directory to download and unpack tar.gz files
+	"""
+	print('===> Wgetting files from source {baseURL} <==')
 	print(f'Snapshot of files to be retrieved: {filenames[:5]}')
 	for i, name in enumerate(filenames):
 		url = os.path.join(baseurlRemote, name)
@@ -100,22 +111,22 @@ def extract_all_targz(path_to_zips, extract_path):
 	extract_path
 
 	parameters:
-		path_to_zips, str: path to the files to be unzipped 
+		path_to_zips, str: path to the files to be unzipped
 		extract_path, str: the directory where unzipped files will be
 			stored
 	"""
-	print(f'===> Extracting tar.gz files from {path_to_zips} <===') 
+	print(f'===> Extracting tar.gz files from {path_to_zips} <===')
 	# identify which files to unzip
 	filesToExtract = [os.path.join(path_to_zips, f) for f in os.listdir(path_to_zips) \
 	if os.path.isfile(os.path.join(path_to_zips, f)) and 'tar.gz' in f]
-	
+
 	# check that there are files to unzip
 	if filesToExtract == []:
 		print('No tar.gz files available to unzip, exiting module')
 	else:
 		print(f'Snapshot of files to extract: {filesToExtract[:5]}')
-	
-		for i, filename in enumerate(filesToExtract):	
+
+		for i, filename in enumerate(filesToExtract):
 			print(f'Unpacking file {filename}, file {i} of {len(filesToExtract)}')
 			shutil.unpack_archive(filename, extract_path)
 
@@ -123,63 +134,53 @@ def extract_all_targz(path_to_zips, extract_path):
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Obtain and unpack XML '
 		'files from PubMed')
-	parser.add_argument('-PubMed', type=str, help='Whether this tool is '
-		'being used to retrieve data from PubMed', default='t')
-	parser.add_argument('-searchPMIDs', type=str, help='Path to csv file '
+	parser.add_argument('-file_list', type=str, help='Path to csv containing '
+		'one column with filenames to retrieve. Use if getting files from '
+		'a source other than PubMed', default='')
+	parser.add_argument('-sep', type=str, help='To be used with -files',
+		default=',')
+	parser.add_argument('-searchPMIDs', type=str, help='csv file '
 		'downloaded from a PubMed search, with one column of PMIDs',
-		default=None)
+		default='')
 	parser.add_argument('-oa_index', type=str, help='Path to PubMed open '
 		'access index csv file. NOTE: csv contains one more col than '
-		' the equivalent txt file, MUST use csv', default=None)
+		' the equivalent txt file, MUST use csv', default='')
 	parser.add_argument('-dest_dir', type=str, help='Directory to place '
 		'downloads and unzipped files,. default is cwd', default='')
 	parser.add_argument('-baseURL', type=str, help='Base URL to prepend '
 		'to filenames in order to wget. Default is baseURL from PubMed',
 		default='ftp://ftp.ncbi.nlm.nih.gov/pub/pmc')
 	parser.add_argument('-download', type=str, help='t/f to download files, '
-	'if false, will use any tar.gz file in dest_dir for extraction', default='f')
+		'if false, will use any tar.gz file in dest_dir for extraction', default='f')
 	parser.add_argument('-extract', type=str, help='t/f to extract the '
-	'downloaded files', default='f')
+		'downloaded files', default='f')
 
 	args = parser.parse_args()
 
-	# check what behaviors are requested 
-	if args.searchPMIDs == None or args.oa_index == None:
-		if args.download.lower() in ['t','true']:
-			if args.files() != None:
-				IDs = getPapers(args.PubMed, paperIndex,
-				 searchResults, args.baseURL, args.dest_dir,
-				 args.download, args.extract, files)
-			else:
-				print('Download request cannot be completed, '
-				'please set -download to False or provide PMID '
-				'and index files (for PubMed) or file list')
-		elif args.download.lower() in ['f','false']:
-			print('No download requested, proceeding to extraction')
-			if args.extract.lower() in ['f','false']:
-				print('Neither download or extraction has been '
-				'requested, exiting module')
-			elif args.extract.lower() in ['t','true']:
-				extract_all_targz(args.dest_dir, args.dest_dir)
+	# check what behaviors are requested and execute
+	if (args.searchPMIDs == '' and args.oa_index == '') \
+	and args.files != '': # non-PubMed search
+		print('===> Initiating non-PubMed file extraction <===')
+		files = pd.read_csv(args.files,sep=args.sep)
+		# check that there is only one col
+		if files.shape[1] > 1:
+			print('Too many columns in files.csv, please try again')
+		elif files.shape[1] == 1:
+			filesList = files[0].tolist()
+			getPapersElsewhere(filesList, args.baseURL, args.dest_dir,
+			args.download, args.extract)
 
-	if (args.searchPMIDs != None and args.oa_index != None):
-		if args.PubMed.lower() in ['t','true']:
-			# make dataframes
-			print('===> Making dataframes of input data <===')
-			paperIndex = pd.read_csv(args.oa_index, names=['filename','citation',\
-			'PMCID','timestamp','PMID','license'], skiprows=[0])
-			print(f'Head of paper index: {paperIndex.head()}')
-			searchResults = pd.read_csv(args.searchPMIDs, names=['PMID'],sep='\t')
-			print(f'Head of search results PMIDs: {searchResults.head()}')
-		
-			# get and extract papers
-			IDs = getPapers(args.PubMed, paperIndex, searchResults,
-			args.baseURL, args.dest_dir, args.download, args.extract)
-			print('PubMed and PMC IDs for search result papers retrieved! Snapshot '
-			f'of IDs: {IDs.head()}')
-			print(f'Downloading as PMCID_PMID.csv to {args.dest_dir}')
-			IDs.to_csv(os.path.join(args.dest_dir, 'PMCID_PMID.csv'),index=False)
-		else: 
-			IDs = getPapers(args.PubMed, paperIndex, searchResults,
-                        args.baseURL, args.dest_dir, args.download, args.extract, files)
-	
+	elif (args.searchPMIDs != '' and args.oa_index != '') \
+	and args.files == '': # PubMed search
+		print('===> Initiating PubMed file extraction <===')
+		getPapersPubmed(args.oa_index, args.searchPMIDs, args.baseURL,
+		args.dest_dir, args.download, args.extract)
+
+	elif (args.searchPMIDs == '' and args.oa_index == '') \
+	and args.files == '':
+		print(f'===> Initializing tar.gz file extraction from {args.dest_dir} <===')
+		extract_all_targz(args.dest_dir, args.dest_dir)
+
+	else:
+		print('It is not clear based on the files you\'ve provided which search '
+		'capability you want to use, please try again')
