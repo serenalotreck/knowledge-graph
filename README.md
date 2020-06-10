@@ -3,7 +3,9 @@ Code exploring the creation of knowledge graphs from plant science papers
 ## Usage
 ### TODO
 --------
-Make a script for conda environment once all modules have been decided upon 
+1. Make a script for conda environment once all modules have been decided upon 
+2. Test non-PubMed behaviors of getPapers.py
+
 ### getPapers.py
 ----------------
 This script retrieves tar.gz files from some online source and extracts the downloads. <br>
