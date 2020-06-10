@@ -14,7 +14,7 @@ import pandas as pd
 import wget
 import shutil 
 
-def getPapers(paperIndex,searchResults,baseurlRemote,dest):
+def getPapers(paperIndex, searchResults, baseurlRemote, dest, download, extract):
 	"""
 	Using the PMID list from a given PubMed search, query the open
 	access subset index to find the URL for each paper, and download to 
@@ -35,7 +35,8 @@ def getPapers(paperIndex,searchResults,baseurlRemote,dest):
 			For PubMed OA package files, the base URL is 
 			ftp://ftp.ncbi.nlm.nih.gov/pub/pmc
 		dest, str: the directory to download and unpack tar.gz files
-
+		download, str: t/f of whether to download new files
+		extract, str: t/f of whether to extract files after downloading
 	returns: a df containing the PMID's and PMCID's of the relevant papers
 	"""
 	# select only the rows that pertain to our search
@@ -46,6 +47,33 @@ def getPapers(paperIndex,searchResults,baseurlRemote,dest):
 	filenames = paperIndexSearch['filename'].tolist()
 
 	# iterate through filename list and wget each one
+	if download.lower() in ['t','true']:
+		downloadFiles(filenames, baseurlRemote, dest)
+	
+	# extract all tar.gz files in dest
+	if extract.lower() in ['t','true']:
+		extract_all_targz(dest, dest)
+
+	# make df with PMCID and PMID
+	print('===> Making ID dataframe <===')
+	IDnums = pd.concat([paperIndexSearch['PMCID'],paperIndexSearch['PMID']], axis=1)
+	IDnums = IDnums.astype({'PMID':'Int64'})
+
+	print('Done!')
+	return IDnums
+
+def downloadFiles(filenames, baseurlRemote, dest):
+	"""
+	Uses the python wget module to download files form source. 
+	
+	parameters:
+		filenames, list of str: list of files to wget	
+		baseurlRemote, str: the base URL that must preceed the filenames
+			in paperIndex['filenames'] in order to use wget. 
+			For PubMed OA package files, the base URL is 
+			ftp://ftp.ncbi.nlm.nih.gov/pub/pmc
+		dest, str: the directory to download and unpack tar.gz files
+	"""
 	print('===> Wgetting files from PubMed <==')
 	print(f'Snapshot of files to be retrieved: {filenames[:5]}')
 	for i, name in enumerate(filenames):
@@ -53,40 +81,25 @@ def getPapers(paperIndex,searchResults,baseurlRemote,dest):
 		print(f'\nFile number {i} of {len(filenames)}')
 		filename = wget.download(url, out=dest)
 
-	# extract all tar.gz files in dest
-	print(f'===> Extracting files from {dest} <===') 
-	filesToExtract = [os.path.join(dest, f) for f in os.listdir(dest) if \
-	os.path.isfile(os.path.join(dest, f)) and 'tar.gz' in f]
-	print(f'Snapshot of files to extract: {filesToExtract[:5]}')
-	extract_all(filesToExtract, dest)
 
-	# make df with PMCID and PMID
-	print('===> Making ID dataframe <===')
-	IDnums = pd.concat([paperIndexSearch['PMCID'],paperIndexSearch['PMID']], axis=1)
-	IDnums = IDnums.astype({'PMID':'Int64'})
-	print(f'Snapshot of the returned df of IDs: {IDnums.head()}')
-
-	print('Done!')
-	return IDnums
-
-
-def extract_all(archives, extract_path):
+def extract_all_targz(path_to_zips, extract_path):
 	"""
-	Adapted from stack overflow answer by mickours:
-	https://stackoverflow.com/questions/30887979/i-want-to-create-a-script-for-unzip-tar-gz-file-via-python
-
-	Unzips all files in the list archives to extract_path. NOTE: since filenames have been 
-	prefiltered to only have tar.gz, there is no protection if prefiltering is skipped to 
-	avoid errors caused by non-unpackable files.
+	Unzips all tar.gz files in the directory path_to_zips to the directory
+	extract_path
 
 	parameters:
-		archives, list of str: list of filenames to unzip 
+		path_to_zips, str: path to the files to be unzipped 
 		extract_path, str: the directory where unzipped files will be
 			stored
 	"""
+	print(f'===> Extracting tar.gz files from {path_to_zips} <===') 
+	# identify which files to unzip
+	filesToExtract = [os.path.join(path_to_zips, f) for f in os.listdir(path_to_zips) \
+	if os.path.isfile(os.path.join(path_to_zips, f)) and 'tar.gz' in f]
+	print(f'Snapshot of files to extract: {filesToExtract[:5]}')
 	
-	for i, filename in enumerate(archives):	
-		print(f'Unpacking file {filename}, file {i} of {len(archives)}')
+	for i, filename in enumerate(filesToExtract):	
+		print(f'Unpacking file {filename}, file {i} of {len(filesToExtract)}')
 		shutil.unpack_archive(filename, extract_path)
 
 
@@ -103,6 +116,10 @@ if __name__ == "__main__":
 	parser.add_argument('baseURL', type=str, help='Base URL to prepend '
 		'to filenames in order to wget. For PubMed this URL is '
 		'ftp://ftp.ncbi.nlm.nih.gov/pub/pmc')
+	parser.add_argument('download', type=str, help='t/f to download files, '
+	'if false, will use any tar.gz file in dest_dir for extraction')
+	parser.add_argument('extract', type=str, help='t/f to extract the '
+	'downloaded files')
 
 	args = parser.parse_args()
 
@@ -115,6 +132,6 @@ if __name__ == "__main__":
 	print(f'Head of searchResults: {searchResults.head()}')
 	
 	# get papers
-	IDs = getPapers(paperIndex, searchResults, args.baseURL, args.dest_dir)
-	print('Files downloaded and unzipped, and IDs retrieved! Snapshot '
+	IDs = getPapers(paperIndex, searchResults, args.baseURL, args.dest_dir, args.download, args.extract)
+	print('PubMed and PMC IDs for search result papers retrieved! Snapshot '
 		f'of IDs: {IDs.head()}')	
