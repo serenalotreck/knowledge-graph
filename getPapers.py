@@ -55,9 +55,10 @@ def getPapers(paperIndex,searchResults,baseurlRemote,dest):
 
 	# extract all tar.gz files in dest
 	print(f'===> Extracting files from {dest} <===') 
-	filesToExtract = [os.path.join(dest, f) for f in os.listdir(dest) if os.path.isfile(os.path.join(dest, f)) and 'tar.gz' in f]
+	filesToExtract = [os.path.join(dest, f) for f in os.listdir(dest) if \
+	os.path.isfile(os.path.join(dest, f)) and 'tar.gz' in f]
 	print(f'Snapshot of files to extract: {filesToExtract[:5]}')
-	extract_all_targz(filesToExtract, dest)
+	extract_all(filesToExtract, dest)
 
 	# make df with PMCID and PMID
 	print('===> Making ID dataframe <===')
@@ -69,12 +70,14 @@ def getPapers(paperIndex,searchResults,baseurlRemote,dest):
 	return IDnums
 
 
-def extract_all_targz(archives, extract_path):
+def extract_all(archives, extract_path):
 	"""
 	Adapted from stack overflow answer by mickours:
 	https://stackoverflow.com/questions/30887979/i-want-to-create-a-script-for-unzip-tar-gz-file-via-python
 
-	Unzips all tar.gz files in the list archives to extract_path.
+	Unzips all files in the list archives to extract_path. NOTE: since filenames have been 
+	prefiltered to only have tar.gz, there is no protection if prefiltering is skipped to 
+	avoid errors caused by non-unpackable files.
 
 	parameters:
 		archives, list of str: list of filenames to unzip 
@@ -82,10 +85,9 @@ def extract_all_targz(archives, extract_path):
 			stored
 	"""
 	
-	for i, filename in enumerate(archives):
-		if 'tar.gz' in filename:	
-			print(f'Unpacking file {filename}, file {i} of {len(archives)}')
-			shutil.unpack_archive(filename, extract_path)
+	for i, filename in enumerate(archives):	
+		print(f'Unpacking file {filename}, file {i} of {len(archives)}')
+		shutil.unpack_archive(filename, extract_path)
 
 
 if __name__ == "__main__":
