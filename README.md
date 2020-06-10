@@ -1,18 +1,27 @@
 # knowledge-graph
 Code exploring the creation of knowledge graphs from plant science papers
 ## Usage
+### TODO
+Make a script for conda environment once all modules have been decided upon 
 ### getPapers.py
-This script retrieves a subset of the [PubMed Open Access Subset](https://www.ncbi.nlm.nih.gov/pmc/tools/openftlist/), based on the results of an arbitrary search. After searching a term of interest, save the search results in the PMID format. This file is then used in this script to obtain downloads (including .nxml files and PDFs if available, more details on the contents of downloads can be found [here](https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/)) of those search results available in the Open Access Subset.<br>
+This script retrieves tar.gz files from some online source and extracts the downloads. <br>
 
-This procedure additionally needs the csv version of the file index. Note that the example below uses the index for the full OA subset. If you need papers with only commercial or non-commercial use licenses, use the respective index files.<br>
+#### PubMed-specific behaviors
+This script is designed specifically for use with the [PubMed Open Access Subset](https://www.ncbi.nlm.nih.gov/pmc/tools/openftlist/), and is designed to obtain a group of open access papers based on the results of an arbitrary search. To use the tool this way, start by performing a PubMed search on your keywords of interest. After searching, save the search results in the PMID format. This file is then used in this script (the `-searchPMIDs` argument) to obtain downloads (including .nxml files and PDFs if available, more details on the contents of downloads can be found [here](https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/)) of those search results available in the Open Access Subset.<br>
 
-The baseURL for PubMed is ftp://ftp.ncbi.nlm.nih.gov/pub/pmc.<br>
+In addition to the search results PMID file, the PubMed download procedure requires the csv version of the OA file index. Note that the default value for `-oa_index` is the full OA subset. If you need papers with only commercial or non-commercial use licenses, use the respective index files, all of which can be found [here](https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/). <br>
 
-The order of arguments is as follows:
+The baseURL for PubMed is ftp://ftp.ncbi.nlm.nih.gov/pub/pmc, and this is the default for the `-baseRUL` argument.<br>
+
+Example usage for the PubMed strategy:
 ```
-python getPapers.py <list of PMID from PubMed search results> <open access csv index file> <directory to put zipped and unzipped retrieved filed> <base URL for PubMed ftp>
+  python getPapers.py -searchPMIDs /mnt/scratch/lotrecks/kg-pubmed-data/JA_test/pmid-jasmonicac-set.txt -oa_index /mnt/scratch/lotrecks/kg-pubmed-data/JA_test/oa_file_list.csv -dest_dir /mnt/scratch/lotrecks/kg-pubmed-data/JA_test/ -baseURL ftp://ftp.ncbi.nlm.nih.gov/pub/pmc -download t -extract t
 ```
-Example usage of getPapers.py:
-```
-  python getPapers.py /mnt/scratch/lotrecks/kg-pubmed-data/JA_test/pmid-jasmonicac-set.txt /mnt/scratch/lotrecks/kg-pubmed- data/JA_test/oa_file_list.csv /mnt/scratch/lotrecks/kg-pubmed-data/JA_test/ ftp://ftp.ncbi.nlm.nih.gov/pub/pmc
-```
+
+#### General behaviors
+In order to use this script to get files from another source, use the `-files` argument instead of `-searchPMIDS` and `-oa_index`. This script was designed for the characteristics of the PubMed OA Subset, so there are some particulars that must be observed when using it for another source. In order to get the desired behavior, you must:
+1. *Only* pass `-files`, not `-searchPMIDS` and `-oa_index`
+2. Provide a `-files` that is a single column csv or txt file with no header, containing the filenames. If the filenames include the baseURL, be sure to pass `-baseURL ''`.
+3. If you want to download *and* extract, ensure that the files you are downloading are in `tar.gz` format: this is the only format that this module supports unzipping.
+
+This script can also be used to simply extract `tar.gz` files. To do so, don't pass any of the three arguments `-files`, `-searchPMIDS`, and `-oa_index`. This will prompt the unpacking of all `tar.gz` files in the directory `-dest_dir`. <br> 
