@@ -36,5 +36,5 @@ python getPapers.py -file_list myFiles.csv -dest_dir /myHomeDir/papers/ -baseURL
 
 Example of `tar.gz` unpacking usage:
 ```
-python getPapers.py -dest_dir /myHomeDir/papers/ -baseURL '' -download t -extract f
+python getPapers.py -dest_dir /myHomeDir/papers/  -download t -extract f
 ```
