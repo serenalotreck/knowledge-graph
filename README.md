@@ -21,6 +21,8 @@ python getPapers.py -searchPMIDs /myHomeDir/pubmed-data/pmid-jasmonicac-set.txt 
 ```
 
 #### General behaviors
+**NOTE:** As of June 10, 2020, these non-PubMed behaviors haven't been fully tested.<br>
+
 In order to use this script to get files from another source, use the `-files` argument instead of `-searchPMIDS` and `-oa_index`. This script was designed for the characteristics of the PubMed OA Subset, so there are some particulars that must be observed when using it for another source. In order to get the desired behavior, you must:
 1. *Only* pass `-files`, not `-searchPMIDS` and `-oa_index`
 2. Provide a `-files` that is a single column csv or txt file with no header, containing the filenames. If the filenames include the baseURL, be sure to pass `-baseURL ''`.
