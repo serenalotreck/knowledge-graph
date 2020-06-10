@@ -13,7 +13,7 @@ This script is designed specifically for use with the [PubMed Open Access Subset
 
 In addition to the search results PMID file, the PubMed download procedure requires the csv version of the OA file index. Note that the default value for `-oa_index` is the full OA subset. If you need papers with only commercial or non-commercial use licenses, use the respective index files, all of which can be found [here](https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/). <br>
 
-The baseURL for PubMed is ftp://ftp.ncbi.nlm.nih.gov/pub/pmc, and this is the default for the `-baseRUL` argument.<br>
+The baseURL for PubMed is ftp://ftp.ncbi.nlm.nih.gov/pub/pmc, and this is the default for the `-baseURL` argument.<br>
 
 Example usage for the PubMed strategy:
 ```
@@ -36,5 +36,5 @@ python getPapers.py -file_list myFiles.csv -dest_dir /myHomeDir/papers/ -baseURL
 
 Example of `tar.gz` unpacking usage:
 ```
-python getPapers.py -dest_dir /myHomeDir/papers/  -download t -extract f
+python getPapers.py -dest_dir /myHomeDir/papers/ -download t -extract f
 ```
