@@ -122,7 +122,7 @@ if __name__ == "__main__":
 	'downloaded files')
 
 	args = parser.parse_args()
-
+	
 	# make dataframes
 	print('===> Making dataframes of input data <===')
 	paperIndex = pd.read_csv(args.oa_index, names=['filename','citation',\
