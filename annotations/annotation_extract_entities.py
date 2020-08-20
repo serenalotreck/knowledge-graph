@@ -123,10 +123,10 @@ def main(annotated_text, save_name, lead_tag, end_tag):
     ent_list = extract_entities(txt_str, ent_list, lead_tag, end_tag)
 
     # Make dataframe and export csv
-    ent_df = pd.DataFrame(ent_list, columns=['Entities'])
-    print(f'\n\nSnapshot of the extracted entities:\n\n{ent_df.Entities.head()}')
+    ent_df = pd.DataFrame(ent_list)
+    print(f'\n\nSnapshot of the extracted entities:\n\n{ent_df.head()}')
     print('\n\nWriting to csv...')
-    ent_df.to_csv(save_name, index=False)
+    ent_df.to_csv(save_name, header=False, index=False)
     print('\n\nDone!')
 
 

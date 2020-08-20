@@ -29,9 +29,10 @@ def add_annotation_iob(iob_table, annotation, doc_sci):
     returns: completed iob table
     """
     # Find matches for annotated entities in doc
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_sci_md')
 
     patterns = [[{'LOWER':token.text.lower()} for token in nlp(entity)] for entity in annotation]
+    print(f'patterns = {patterns}')
 
     matcher = Matcher(nlp.vocab)
     for i, pattern in enumerate(patterns):
@@ -40,9 +41,11 @@ def add_annotation_iob(iob_table, annotation, doc_sci):
     matches = matcher(doc_sci)
 
     # Check to make sure all entities were found
-    matches_check = [(doc[match[1]:match[2]]).text for match in matches]
+    matches_check = [(doc_sci[match[1]:match[2]]).text.lower() for match in matches]
+    print(f'matches_check: {matches_check}')
+    print(f'annotation: {annotation}')
     for entity in annotation:
-        if entity not in matches_check:
+        if entity.lower() not in matches_check:
             raise Exception(f'Entity {entity} not found in matches!')
 
     # Initialize empty string column in table
@@ -102,12 +105,12 @@ def main(text, annotation, save_path, save_name):
                 'bionlp':doc_bionlp}
 
     # Print numbers of entities
-    print(f'Number of entities identified:\nFull pipeline: {len(doc_sci.ents)} '
+    print(f'\nNumber of entities identified:\nFull pipeline: {len(doc_sci.ents)} '
             f'\nCRAFT model: {len(doc_craft.ents)}'
             f'\nJNLPBA model: {len(doc_jnlpba.ents)}'
-            f'\nBC5CDR model: {len(doc_bc5cdr)}'
-            f'\nBIONLP13CG model: {len(doc_bionlp)}'
-            f'\n Hand annotation: {len(annotation)}')
+            f'\nBC5CDR model: {len(doc_bc5cdr.ents)}'
+            f'\nBIONLP13CG model: {len(doc_bionlp.ents)}'
+            f'\nHand annotation: {len(annotation)}')
 
     # Make comparison table
     print('\n\nMaking entity comparison table. This will use the spaCy IOB '
@@ -118,20 +121,24 @@ def main(text, annotation, save_path, save_name):
     for key, doc in doc_dict.items():
         iob = [(t.text, t.ent_iob_, t.ent_type_) for t in doc]
         cols = ['text', f'{key}_iob', f'{key}_type']
-        df = pd.DataFrame(iob, cols)
-        iob_df_list.append(def)
-    iob_merged = reduce(lambda left, right: pd.merge(left, right, left_on='text',
-                        right_on='text'), iob_df_list)
+        df = pd.DataFrame(iob, columns=cols)
+        iob_df_list.append(df)
+    print(f'Dataframe shapes are {[df.shape for df in iob_df_list]}')
+    # Merge is too memory intensive, so concatonate, assert that all text
+    # columns are equal, and drop all but one
+    iob_concat = reduce(lambda left, right: pd.concat([left, right], axis=1), iob_df_list)
+    print(f'Snapshot of concatonated frames:\n{iob_concat.head()}')
 
     # Add hand annotation
-    iob_complete = add_annotation_iob(iob_merged, annotation, doc_sci)
+    iob_complete = add_annotation_iob(iob_concat, annotation, doc_sci)
 
     # Save csv of table and table transpose
     print('Saving to csv...')
     iob_complete.to_csv(f'{save_path}/{save_name}.csv', index=False)
     print('Saving table transpose to csv...')
     iob_transpose = iob_complete.T
-    iob_transpose.to_csv{f'{save_path}/{save_name}_transpose.csv', index=False}
+    iob_transpose.to_csv(f'{save_path}/{save_name}_transpose.csv', index=False)
+
 
 
 if __name__ == "__main__":
@@ -154,4 +161,4 @@ if __name__ == "__main__":
     with open(args.annotation) as f:
         annotation = [row[0] for row in csv.reader(f)]
 
-    main(text, annotation, save_path, save_name)
+    main(text, annotation, args.save_path, args.save_name)
