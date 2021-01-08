@@ -13,6 +13,7 @@ import argparse
 import pandas as pd
 import wget
 import shutil
+import time 
 
 def getPapersPubmed(paperIndex, searchResults, baseurlRemote, dest, download, extract):
 	"""
@@ -54,6 +55,9 @@ def getPapersPubmed(paperIndex, searchResults, baseurlRemote, dest, download, ex
 	# Extract all tar.gz files in dest
 	if extract.lower() in ['t','true']:
 		extract_all_targz(dest, dest)
+
+	# Reset modification time so files don't get deleted
+	reset_mod_time(dest)
 
 	# Make df with PMCID and PMID
 	print('===> Making ID dataframe <===')
@@ -105,6 +109,26 @@ def extract_all_targz(path_to_zips, extract_path):
 		for i, filename in enumerate(filesToExtract):
 			print(f'Unpacking file {filename}, file {i} of {len(filesToExtract)}')
 			shutil.unpack_archive(filename, extract_path)
+
+def reset_mod_time(dest):
+	"""
+	Reset the modification time for the unpacked files so they don't get deleted from scratch.
+	
+	parameters:
+		dest, str: path to directory containing unzipped directories
+	"""
+	# Get current time
+	time_now = time.time()
+
+	# Get list of directories in top level
+	dirs = [os.path.join(dest, o) for o in os.listdir(dest) if os.path.isdir(os.path.join(dest,o))]
+	
+	# Go through the files and update mod and access times
+	for directory in dirs:
+		unpacked_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+		for f in unpacked_files:
+			os.utime(os.path.join(directory, f), (time_now, time_now))		
+	
 
 def main(searchResults, paperIndex, dest_dir, baseURL, download, extract):
 	
