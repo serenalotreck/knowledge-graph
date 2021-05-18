@@ -87,12 +87,13 @@ def common_sense_check(train_docs, model):
             'to themselves.\n')
 
 
-def train_model(train_docs, model_type):
+def train_model(train_docs, vector_size, model_type):
     """
     Instantiate and train a Doc2Vec model. 
 
     parameters:
         train_docs, list of TaggedDocument objects: training data
+        vector_size, int: number of dimensions for the vectors in Doc2Vec
         model_type, str: DM or DBOW, which implementation of PV to use
     
     returns:
@@ -105,7 +106,8 @@ def train_model(train_docs, model_type):
         model_type = 0
     
     # Instantiate model
-    model = gensim.models.doc2vec.Doc2Vec(vector_size=50, min_count=2, dm=model_type, epochs=20)
+    model = gensim.models.doc2vec.Doc2Vec(vector_size=vector_size, 
+            min_count=2, dm=model_type, epochs=20)
 
     # Build a vocabulary 
     model.build_vocab(train_docs)
@@ -173,7 +175,7 @@ def preprocess_data(data, train=False):
                 yield tokens
 
 
-def main(training, test, to_apply, use_trained, model_type, out_loc):
+def main(training, test, to_apply, use_trained, vector_size, model_type, out_loc):
 
     # Prepare and preprocess training, test & apply data
     print('\nPreprocessing data...\n')
@@ -186,7 +188,7 @@ def main(training, test, to_apply, use_trained, model_type, out_loc):
     # Train the model
     if not use_trained:
         print('\nTraining model...\n')
-        model = train_model(train_docs, model_type)
+        model = train_model(train_docs, vector_size, model_type)
         print(f'Saving trained model as {out_loc}/doc2vec_model')
         model.save(f'{out_loc}/doc2vec_model')
 
@@ -217,7 +219,7 @@ def main(training, test, to_apply, use_trained, model_type, out_loc):
     # Write out vectors to a file
     print('\nWriting out vectors...\n')
     df = pd.DataFrame.from_dict(apply_vectors, orient='index', 
-            columns=[f'vector_dim{i}' for i in range(50)])
+            columns=[f'vector_dim{i}' for i in range(vector_size)])
     print(df.head())
     df.to_csv(f'{out_loc}/apply_vectors.csv')
     print(f'Vector file has been written to {out_loc}/apply_vectors.csv\n')
@@ -237,6 +239,8 @@ if __name__ == "__main__":
             default='False')
     parser.add_argument('-to_apply', type=str, help='Path to directory containing documents on '
             'which to apply the model & clustering')
+    parser.add_argument('-vector_size', type=int, help='Number of dimensions for doc2vec vectors.',
+            default=50)
     parser.add_argument('-model_type', type=str, help='Which implementation of gensim Paragraph '
             'Vector to use. Options are DM and DBOW', default='DM') 
     parser.add_argument('-out_loc', type=str, help='Path to save output')
@@ -252,8 +256,8 @@ if __name__ == "__main__":
     args.to_apply = os.path.abspath(args.to_apply)
     args.out_loc = os.path.abspath(args.out_loc)
     
-    main(args.training, args.test, args.to_apply, args.use_trained, args.model_type,
-            args.out_loc)
+    main(args.training, args.test, args.to_apply, args.use_trained, args.vector_size, 
+            args.model_type, args.out_loc)
 
 
 
