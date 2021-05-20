@@ -12,15 +12,16 @@ import argparse
 
 def compare_two_dirs(dir1_names, dir2_names):
     """
-    Compares two lists of base file names (strings) obtained from data directories
-    for overlap. Prints a report of the name of the datasets that have overlap and 
-    the specific overlapping abstract names.
+    Compares two lists of base file names (strings) obtained from data 
+    directories for overlap. Returns a list of the overlapping abstract names.
 
     parameters:
         dir1_names, list of str: list of basenames from dir1
         dir2_names, list of str: list of basenames from dir2
 
-    returns: None
+    returns:
+        a list of str that are names of overlapping abstracts, if there are 
+            overlaps, otherwise, returns the string 'No data overlap!'
     """
     # Do a simple boolean check, if True, get specific names
     
@@ -28,30 +29,64 @@ def compare_two_dirs(dir1_names, dir2_names):
     dir2_set = set(dir2_names)
     
     if bool(dir1_set & dir2_set):
-        print('Overlap found. Overlapping documents are:')
-        print(f'{dir1_set & dir2_set}')
-        print('Please revise your data before proceeding to document clustering.\n')
-
+        return list(dir1_set & dir2_set)
     else:
-        print('No data overlap! Safe to proceed to next step.\n')
+        return 'No data overlap!'
 
 
-def main(tr, te, ap):
+def get_names(tr, te, ap):
+    """
+    Gets the file names in the directories for each dataset.
 
-    # Get a list of names in the directories
+    parameters:
+        tr, te, ap: str, paths to directories with data to compare 
+
+    returns:
+        fnames, dict of list of str: keys are dataset names, values 
+            are lists of the base file names in each dataset
+    """
     dsets = {'train':tr, 'test':te, 'apply':ap}
     fnames = {}
     for name, dataset in dsets.items():
-        files = [f for f in os.listdir(dataset) if os.path.isfile(os.path.join(dataset, f))]
+        files = [f for f in os.listdir(dataset) 
+                if os.path.isfile(os.path.join(dataset, f))]
         basenames = [os.path.splitext(f)[0] for f in files]
         fnames[name] = basenames
 
-    # Check for overlap and report if there are files with the same base name in the directories
-    for dir1, dir2 in [(x, y) for i,x in enumerate(dsets.keys()) 
-                        for j,y in enumerate(dsets.keys()) if i != j]:
+    return fnames
+
+
+def main(tr, te, ap, out_loc):
+
+    # Get a list of names in the directories
+    fnames = get_names(tr, te, ap)
+
+    # Check for overlap 
+    dsets = {'train':tr, 'test':te, 'apply':ap}
+    comparisons = [] 
+    for i,x in enumerate(dsets.keys()): 
+        for j,y in enumerate(dsets.keys()):
+            if (y, x) not in comparisons and i != j:
+                comparisons.append((x,y))
+    
+    overlaps = {}
+    for dir1, dir2 in comparisons:
         print('---------------------------------------')
         print(f'\nComparing {dir1} and {dir2}:\n')
-        compare_two_dirs(fnames[dir1], fnames[dir2])
+        overlap = compare_two_dirs(fnames[dir1], fnames[dir2])
+        if overlap != 'No data overlap!':
+            print(f'Overlap found between {dir1} and {dir2}. See output '
+                    'file for details.\n')
+        else: 
+            print('No overlap found!\n')
+        overlaps[f'{dir1}-{dir2}'] = overlap
+
+    # Write out file 
+    print('\nWriting output file...')
+    with open(f'{out_loc}/check_overlap_file.txt', 'w') as f:
+        for key, value in overlaps.items():
+            f.write(f'Overlapping abstracts between {key}:\n')
+            f.write(f'{value}\n\n')
 
     print('\nDone!')
 
@@ -65,11 +100,14 @@ if __name__ == '__main__':
             help='Path to directory containing test data.')
     parser.add_argument('-ap', '--apply_dir', type=str, 
             help='Path to directory containing training data')
+    parser.add_argument('-out_loc', type=str, 
+            help='Path to save output file')
 
     args = parser.parse_args()
 
     args.train_dir = os.path.abspath(args.train_dir)
     args.test_dir = os.path.abspath(args.test_dir)
     args.apply_dir = os.path.abspath(args.apply_dir)
+    args.out_loc = os.path.abspath(args.out_loc)
 
-    main(args.train_dir, args.test_dir, args.apply_dir)
+    main(args.train_dir, args.test_dir, args.apply_dir, args.out_loc)
