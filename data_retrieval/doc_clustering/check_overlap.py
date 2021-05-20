@@ -51,6 +51,7 @@ def get_names(tr, te, ap):
         files = [f for f in os.listdir(dataset) 
                 if os.path.isfile(os.path.join(dataset, f))]
         basenames = [os.path.splitext(f)[0] for f in files]
+        assert len(basenames) > 0, f'The {name} directory is empty!'
         fnames[name] = basenames
 
     return fnames
