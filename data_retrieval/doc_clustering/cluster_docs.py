@@ -1,6 +1,6 @@
 """
-Reads in document vectors produced by doc2vec.py, clusters them according to 
-the user-chosen algorithm, and returns the file names of the number of abstracts
+Reads in document vectors produced by doc2vec.py, clusters them using the mean-shift
+algorithm, and returns the file names of the number of abstracts
 defined by the user. Abstracts are chosen by iterating over the resulting clusters
 until the desired number is reached, taking one abstract from each cluster each time
 until the cluster is exhausted.
@@ -14,8 +14,6 @@ import random
 import numpy as np
 import pandas as pd
 from sklearn.cluster import MeanShift
-from sklearn.mixture import GaussianMixture
-from sklearn.cluster import DBSCAN
 
 
 def choose_abstracts(cluster_lists, number_abstracts):
@@ -67,56 +65,42 @@ def make_cluster_lists(clusters):
             PMID corresponding to that cluster
     """
     cluster_ids = np.unique(clusters.cluster)
+    print(f'There are {len(cluster_ids)} clusters in the data.')
     cluster_lists = {}
     for cluster_id in cluster_ids:
         id_df = clusters[clusters['cluster']==cluster_id]
         cluster_list = id_df['doc_name'].tolist()
         cluster_lists[cluster_id] = cluster_list
+        print(f'There are {len(cluster_list)} abstracts in cluster {cluster_id}')
 
     return cluster_lists
 
 
-def cluster_docvecs(vecs, algorithm):
+def cluster_docvecs(vecs):
     """
-    Cluster document vectors according to the algorithm of choice. 
+    Cluster document vectors using the mean-shift algorithm. 
     
     Notes:
         - sklearn mean-shift is implemented with the estimate_bandwith
-            option for estimating the neighborhood distance measure epsilon.
+            option for estimating the width of the sliding window.
             estimate_bandwidth scales poorly compared to MeanShift, so this
             may need to be reassessed if runtime on larger datasets is slow.
-        - EM-GMM can assign mixed membership, however, we only want each doc
-            to be in one cluster. EM-GMM is being used instead of k-means 
-            because the cluster shape is more flexible, but docs will be
-            assigned only to the cluster to which they have the greatest 
-            membership.
         
     parameters:
         vecs, df: dataframe with row indices as doc names, 
             and each column a dimension of the document vector
-        algorithm, str: algorithm to use. Choices are MS (mean-shift),
-            EMGMM (expectation-maximization with gaussian mixture models),
-            or DBSCAN.
 
     returns: 
-        
+        cluster_df, df: two columns, one with the document name and the other 
+            with its cluster ID
     """
     # Drop labels for training data
     vec_names = vecs.index.tolist()
     X = vecs.to_numpy()
     
     # MeanShift implementation
-    if algorithm == 'MS':
-        ms = MeanShift()
-        cluster_labels = ms.fit_predict(X)
-
-    # EM-GMM implementation
-    if algorithm == 'EMGMM':
-        pass
-
-    # DBSCAN implementation
-    if algorithm == 'DBSCAN':
-        pass
+    ms = MeanShift()
+    cluster_labels = ms.fit_predict(X)
 
     # Format and return clusters
     cluster_df = pd.DataFrame({'doc_name':vec_names, 'cluster':cluster_labels})
@@ -124,7 +108,7 @@ def cluster_docvecs(vecs, algorithm):
     return cluster_df
 
 
-def main(vector_path, algorithm, number_abstracts, out_loc):
+def main(vector_path, number_abstracts, out_loc):
     
     # Read in vectors 
     print('\nReading in the document vectors...')
@@ -135,7 +119,7 @@ def main(vector_path, algorithm, number_abstracts, out_loc):
     
     # Cluster
     print('\nClustering document vectors...')
-    clusters = cluster_docvecs(vecs, algorithm) 
+    clusters = cluster_docvecs(vecs) 
     
     # Make a list of PMID for each cluster
     cluster_lists = make_cluster_lists(clusters)
@@ -149,8 +133,10 @@ def main(vector_path, algorithm, number_abstracts, out_loc):
 
     # Write out abstract names
     print('\nWriting out file with chosen abstract names...')
-    abstract_names_df.to_csv(f'{out_loc}/{number_abstracts}_chosen_abstracts_{algorithm}.txt',
+    abstract_names_df.to_csv(f'{out_loc}/{number_abstracts}_chosen_abstracts.txt',
             index=False)
+
+    print(f'File has been written to {out_loc}/{number_abstracts}_chosen_abstracts.txt\n')
 
     print('\nDone!\n')
 
@@ -160,11 +146,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cluster and choose abstracts')
 
     parser.add_argument('-vecs', '--vectors', type=str, help='Path to csv with doc vectors.')
-    parser.add_argument('-alg', '--algorithm', type=str, 
-        help='Clustering algorithm to use. Options are EM-GMM (EMGMM), DBSCAN, or mean-shift (MS). '
-            'Default is mean-shift. Use visualize_clusters.py to determine if EM-GMM or '
-            'DBSCAN is a better choice.', 
-        default='MS')
     parser.add_argument('-num', '--number_abstracts', type=int, 
         help='Number of abstracts to select from clusters. Must be less than the total '
             'number of documents available.')
@@ -175,4 +156,4 @@ if __name__ == '__main__':
     args.vectors = os.path.abspath(args.vectors)
     args.out_loc = os.path.abspath(args.out_loc)
 
-    main(args.vectors, args.algorithm, args.number_abstracts, args.out_loc)
+    main(args.vectors, args.number_abstracts, args.out_loc)
