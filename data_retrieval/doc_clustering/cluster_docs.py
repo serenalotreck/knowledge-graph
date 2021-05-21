@@ -25,7 +25,7 @@ def choose_abstracts(cluster_lists, number_abstracts):
 
     parameters:
         cluster_lists, dict of list: keys are cluster labels, values are lists of 
-            PMID corresponding to that cluster
+            of PMID corresponding to that cluster
         number_abstracts, int: number of abstracts to select
     
     returns:
@@ -55,14 +55,14 @@ def choose_abstracts(cluster_lists, number_abstracts):
 
 def make_cluster_lists(clusters):
     """
-    Make a dictionary containing a list of PMID corresponding to each cluster.
+    Make a dictionary containing a list of files corresponding to each cluster.
 
     parameters:
         clusters, df: columns are 'doc_name' and 'cluster'
 
     returns:
-        cluster_lists, dict of list: keys are cluster labels, values are lists of 
-            PMID corresponding to that cluster
+        cluster_lists, dict of list: keys are cluster labels, values are lists
+            of file names corresponding to that cluster
     """
     cluster_ids = np.unique(clusters.cluster)
     print(f'There are {len(cluster_ids)} clusters in the data.')
@@ -71,7 +71,8 @@ def make_cluster_lists(clusters):
         id_df = clusters[clusters['cluster']==cluster_id]
         cluster_list = id_df['doc_name'].tolist()
         cluster_lists[cluster_id] = cluster_list
-        print(f'There are {len(cluster_list)} abstracts in cluster {cluster_id}')
+        print(f'There are {len(cluster_list)} abstracts in '
+                f'cluster {cluster_id}')
 
     return cluster_lists
 
@@ -115,7 +116,8 @@ def main(vector_path, number_abstracts, out_loc):
     vecs = pd.read_csv(vector_path, index_col=0)
     assert (vecs.shape[0] >= number_abstracts), ( 
             f'You\'ve asked for {number_abstracts} abstracts, but '
-            'there are only {vecs.shape[0]} to choose from, please try again with a lower number.')
+            'there are only {vecs.shape[0]} to choose from, please try again '
+            'with a lower number.')
     
     # Cluster
     print('\nClustering document vectors...')
@@ -147,11 +149,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Cluster and choose abstracts')
 
-    parser.add_argument('-vecs', '--vectors', type=str, help='Path to csv with doc vectors.')
+    parser.add_argument('-vecs', '--vectors', type=str, 
+            help='Path to csv with doc vectors.')
     parser.add_argument('-num', '--number_abstracts', type=int, 
-        help='Number of abstracts to select from clusters. Must be less than the total '
-            'number of documents available.')
-    parser.add_argument('-out_loc', type=str, help='Directory to save output file.')
+            help='Number of abstracts to select from clusters. Must be less '
+            'than the total number of documents available.')
+    parser.add_argument('-out_loc', type=str, 
+            help='Directory to save output file.')
 
     args = parser.parse_args()
 

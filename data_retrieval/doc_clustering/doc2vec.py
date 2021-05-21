@@ -163,9 +163,8 @@ def preprocess_data(data, train=False):
     """
     # Get list of files in data directory
     # These are the tags
-    names = [f for f in os.listdir(data) 
-            if os.path.isfile(os.path.join(data, f))]
-     
+    names = get_tags(data)
+
     # Tokenize documents & add tags if training data
     for i, f in enumerate(names):
         with smart_open.open(f'{data}/{f}', encoding='iso-8859-1') as myfile:
