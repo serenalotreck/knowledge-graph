@@ -133,10 +133,12 @@ def main(vector_path, number_abstracts, out_loc):
 
     # Write out abstract names
     print('\nWriting out file with chosen abstract names...')
-    abstract_names_df.to_csv(f'{out_loc}/{number_abstracts}_chosen_abstracts.txt',
+    abstract_names_df.to_csv(f'{out_loc}/{number_abstracts}'
+            '_chosen_abstracts.csv',
             index=False)
 
-    print(f'File has been written to {out_loc}/{number_abstracts}_chosen_abstracts.txt\n')
+    print(f'File has been written to {out_loc}/{number_abstracts}'
+            '_chosen_abstracts.csv\n')
 
     print('\nDone!\n')
 
