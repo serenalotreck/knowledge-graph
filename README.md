@@ -15,3 +15,5 @@ In the `data_retreival` directory, there are two methods for obtaining text data
 python getAbstracts.py -abstracts_txt /path/to/PubMed/file.txt -dest_dir path/to/save/folder/
 ```
 The PubMed file is obtained by saving search results in "PubMed" format.
+>
+Additionally in the `data_retreival` directory is `doc_clustering`, which contains scripts and a README with instructions about how to use the scripts to cluster and select from the abstracts obtained from `abstracts_only`. 
