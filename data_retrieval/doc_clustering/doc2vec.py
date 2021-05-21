@@ -46,11 +46,15 @@ def test_check(test_docs, test, train_docs, model, out_loc):
             inferred_vector = model.infer_vector(test_docs[doc_idx])
             sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
             
-            myfile.write(f'Test Document ({names[doc_idx]}): «{" ".join(test_docs[doc_idx])}»\n\n')
+            myfile.write(f'Test Document ({names[doc_idx]}): '
+                    f'«{" ".join(test_docs[doc_idx])}»\n\n')
             myfile.write(f'SIMILAR/DISSIMILAR DOCS PER MODEL {model}\n\n')
-            for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST',len(sims) - 1)]:
+            for label, index in [('MOST', 0), 
+                                ('MEDIAN', len(sims)//2), 
+                                ('LEAST',len(sims) - 1)]:
                 target_tag = sims[index][0]
-                target_object = [obj for obj in train_docs if obj.tags[0] == target_tag]
+                target_object = [obj for obj in train_docs 
+                        if obj.tags[0] == target_tag]
                 myfile.write(f'{label}, similarity measure sims[index][1], '
                         f'doc name {sims[index][0]}:\n '
                         f'«{" ".join(target_object[0].words)}»\n\n')
@@ -59,9 +63,9 @@ def test_check(test_docs, test, train_docs, model, out_loc):
 def common_sense_check(train_docs, model):
     """
     Check model performance by treating training data as unseen data and looking
-    for most similar documents in training set. Prints a percentage that represents
-    how frequently a document is found to be most similar to itself - higher values 
-    indicate better performance.
+    for most similar documents in training set. Prints a percentage that 
+    represents how frequently a document is found to be most similar to 
+    itself - higher values indicate better performance.
 
     parameters:
         train_docs, list of TaggedDocument: training documents
@@ -83,8 +87,8 @@ def common_sense_check(train_docs, model):
     # Count how many of the docs were matched as most similar with themselves 
     counter = collections.Counter(ranks)
     percent_correct = (counter[0]/(counter[0]+counter[1]))*100
-    print(f'{percent_correct:.2f}% of training documents were found to be most similar '
-            'to themselves.\n')
+    print(f'{percent_correct:.2f}% of training documents were found to be most '
+            'similar to themselves.\n')
 
 
 def train_model(train_docs, vector_size, model_type):
@@ -113,7 +117,8 @@ def train_model(train_docs, vector_size, model_type):
     model.build_vocab(train_docs)
 
     # Train the model
-    model.train(train_docs, total_examples=model.corpus_count, epochs=model.epochs)
+    model.train(train_docs, total_examples=model.corpus_count, 
+            epochs=model.epochs)
 
     return model
 
@@ -126,7 +131,7 @@ def get_tags(data):
         data, str: path to directory containing data
 
     returns:
-        names, list of str: the file names (stripped of file ext)
+        names, list of str: the file names 
             of the files in the data directory
     """
 
@@ -134,11 +139,10 @@ def get_tags(data):
 ## order of docs in the processed list
 
     # Get list of files in data directory
-    files = [f for f in os.listdir(data) if os.path.isfile(os.path.join(data, f))]
+    # These are the names
+    names = [f for f in os.listdir(data) 
+            if os.path.isfile(os.path.join(data, f))]
     
-    # Get names
-    names = [os.path.splitext(f)[0] for f in files]
-
     return names
 
 
@@ -146,8 +150,8 @@ def preprocess_data(data, train=False):
     """
     Prep data for input into gensim PV.
 
-    Tokenizes input documents, and associates a tag with each doc if train = True.
-    Tags are the name of the document without the file extension.
+    Tokenizes input documents, and associates a tag with each doc if 
+    train = True. Tags are the name of the document file.
 
     parameters:
         data, str: path to directory containing data 
@@ -158,14 +162,12 @@ def preprocess_data(data, train=False):
         a generator containing the documents
     """
     # Get list of files in data directory
-    files = [f for f in os.listdir(data) if os.path.isfile(os.path.join(data, f))]
-    
-    # Make token names for training data 
-    if train:
-        names = [os.path.splitext(f)[0] for f in files]
-    
+    # These are the tags
+    names = [f for f in os.listdir(data) 
+            if os.path.isfile(os.path.join(data, f))]
+     
     # Tokenize documents & add tags if training data
-    for i, f in enumerate(files):
+    for i, f in enumerate(names):
         with smart_open.open(f'{data}/{f}', encoding='iso-8859-1') as myfile:
             line = myfile.read().replace("\n", " ")
             tokens = gensim.utils.simple_preprocess(line)
@@ -175,7 +177,8 @@ def preprocess_data(data, train=False):
                 yield tokens
 
 
-def main(training, test, to_apply, use_trained, vector_size, model_type, out_loc):
+def main(training, test, to_apply, use_trained, vector_size, 
+        model_type, out_loc):
 
     # Prepare and preprocess training, test & apply data
     print('\nPreprocessing data...\n')
@@ -201,7 +204,8 @@ def main(training, test, to_apply, use_trained, vector_size, model_type, out_loc
     if not use_trained:
         print('\nWriting test data check file...\n')
         test_check(test_docs, test, train_docs, model, out_loc)
-        print(f'Test check file has been written to {out_loc}/doc2vec_test_output.txt\n')
+        print('Test check file has been written to '
+            f'{out_loc}/doc2vec_test_output.txt\n')
 
     # Load model 
     if use_trained:
@@ -231,17 +235,23 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Run Doc2Vec on abstracts')
 
-    parser.add_argument('-training', type=str, help='Path to a directory with training documents. '
+    parser.add_argument('-training', type=str, 
+            help='Path to a directory with training documents. '
             'Required if -use_trained is False (default)', default=None)
-    parser.add_argument('-test', type=str, help='Path to directory containing test documents. '
+    parser.add_argument('-test', type=str, 
+            help='Path to directory containing test documents. '
             'Required if -use_trained is False (default)', default=None)
-    parser.add_argument('-use_trained', type=str, help='Path to a pre-trained gensim model.', 
+    parser.add_argument('-use_trained', type=str, 
+            help='Path to a pre-trained gensim model.', 
             default='False')
-    parser.add_argument('-to_apply', type=str, help='Path to directory containing documents on '
+    parser.add_argument('-to_apply', type=str, 
+            help='Path to directory containing documents on '
             'which to apply the model & clustering')
-    parser.add_argument('-vector_size', type=int, help='Number of dimensions for doc2vec vectors.',
+    parser.add_argument('-vector_size', type=int, 
+            help='Number of dimensions for doc2vec vectors.',
             default=50)
-    parser.add_argument('-model_type', type=str, help='Which implementation of gensim Paragraph '
+    parser.add_argument('-model_type', type=str, 
+            help='Which implementation of gensim Paragraph '
             'Vector to use. Options are DM and DBOW', default='DM') 
     parser.add_argument('-out_loc', type=str, help='Path to save output')
 
@@ -256,8 +266,8 @@ if __name__ == "__main__":
     args.to_apply = os.path.abspath(args.to_apply)
     args.out_loc = os.path.abspath(args.out_loc)
     
-    main(args.training, args.test, args.to_apply, args.use_trained, args.vector_size, 
-            args.model_type, args.out_loc)
+    main(args.training, args.test, args.to_apply, args.use_trained, 
+            args.vector_size, args.model_type, args.out_loc)
 
 
 
