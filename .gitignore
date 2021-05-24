@@ -6,4 +6,5 @@ jupyter_notebooks/SciArt Graphs.ipynb
 ###################
 data_retrieval/oa_subset/text_ids/
 data/
-
+job_scripts/
+jupyter_notebooks/.ipynb_checkpoints
