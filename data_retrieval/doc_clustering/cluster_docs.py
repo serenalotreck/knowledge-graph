@@ -110,7 +110,9 @@ def cluster_docvecs(vecs):
 
 
 def main(vector_path, number_abstracts, out_loc):
-    
+   
+    print('\n======> Clustering and choosing docs <======\n')
+
     # Read in vectors 
     print('\nReading in the document vectors...')
     vecs = pd.read_csv(vector_path, index_col=0)
@@ -130,7 +132,7 @@ def main(vector_path, number_abstracts, out_loc):
     print('\nChoosing abstracts from clusters...')
     abstract_names = choose_abstracts(cluster_lists, number_abstracts)    
     abstract_names_df = pd.DataFrame(abstract_names, columns=['abstract_name'])
-    print('Shapshot of chosen abstracts:\n')
+    print('Snapshot of chosen abstracts:\n')
     print(abstract_names_df.head())
 
     # Write out abstract names
@@ -143,7 +145,7 @@ def main(vector_path, number_abstracts, out_loc):
             '_chosen_abstracts.csv\n')
 
     print('\nDone!\n')
-
+    return f'{out_loc}/{number_abstracts}_chosen_abstracts.csv' # For doc_clustering.py
 
 if __name__ == '__main__':
 

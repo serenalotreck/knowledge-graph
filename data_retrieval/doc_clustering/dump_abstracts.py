@@ -17,6 +17,8 @@ import pandas as pd
 
 def main(abstract_list, abstract_dir, parent_dir, new_dir_name):
 
+    print('\n======> Putting chosen abstracts into new directory <======\n')
+
     # Read in the abstract list
     print('\nReading in data...')
     abs_df = pd.read_csv(abstract_list)
