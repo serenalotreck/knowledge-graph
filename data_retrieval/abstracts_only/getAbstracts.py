@@ -51,14 +51,14 @@ def parse_abstracts(abstracts_txt, dest_dir):
                                         in_abstract = True
                                         
                                         # Add first line to abstract
-                                        abstract += line[6:]
+                                        abstract += line[6:-1] # Remove newlines
 
                         # Look for the end of the abstract
                         elif in_abstract and pmid_found:
                                 
                                 # Keep adding lines until the end 
                                 if line[:6] == '      ':
-                                        abstract += line[6:]
+                                        abstract += line[6:-1] # Remove newlines
                                 else:
                                         # Reset boolean housekeepers 
                                         in_abstract = False
