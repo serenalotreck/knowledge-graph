@@ -12,49 +12,41 @@ from os.path import abspath
 import argparse 
 from collections import defaultdict
 import jsonlines
+from graphviz import Digraph 
 
 
 def write_dot_file(triples, loose_ents, graph_name, out_loc):
     """
-    Takes triples and loose entities, formats them for DOT, and 
-    writes to output file. 
+    Takes triples and loose entities and uses the graphviz library
+    to format them into a DOT file. 
 
     parameters:
         triples, list of 3-tuples: (head, relation, tail) triples
         loose_ents, list of str: loose entities 
         graph_name, str: filename for output file 
         out_loc, str: path to save file 
-    
-    returns: None
     """
+    # Instatiate the graph 
+    dot = Digraph(comment=graph_name)
+
+    # Get triple weights
     triple_weights = defaultdict(int)
     
-    # Get triple weights
     for triple in triples:
         triple_weights[triple] += 1
     
-    # Format triples 
-    to_write = []
-    for triple, count in triple_weights.items():
-        # Remove any double quotes in the entities 
-        triple = (triple[0].replace('"', ' '), triple[1].replace('"', ' '),
-                triple[2].replace('"', ' '))
-        formatted_triple = f'"{triple[0]}" -> "{triple[2]}" [ label="{triple[1]}", weight={count} ];'
-        to_write.append(formatted_triple)
-    
-    trip_num = len(to_write)
+    # Add triples 
+    for triple, weight in triple_weights.items():
+        dot.edge(triple[0], triple[2], label=triple[1], 
+                weight=f'{weight}')
 
-    # Add loose entities 
-    to_write += loose_ents
-    ent_num = len(to_write) - trip_num
-    print(f'\nThe graph has {trip_num} triples and {ent_num} additional entities.')
+    # Add entities 
+    for entity in loose_ents:
+        dot.node(entity)
 
-    # Write to doc
-    with open(f'{out_loc}/{graph_name}.dot', 'w') as myfile:
-        myfile.write('digraph {\n')
-        for line in to_write:
-            myfile.write(f'    {line}\n')
-        myfile.write('}\n')
+    # Save the file 
+    dot.save(f'{out_loc}/{graph_name}.gv')
+
 
 def get_tokenized_doc(doc):
     """
@@ -77,7 +69,8 @@ def get_tokenized_doc(doc):
 def get_loose_ents(preds, triples):
     """
     Get all entities  that are not included in a relation as a list from a set 
-    of dygiepp predictions.
+    of dygiepp predictions. Removes any double quote marks, as these are 
+    non-escapable and special in the DOT format.
 
     parameters:
         preds, list of dict: one dict per doc, minimally must contain the keys
@@ -101,6 +94,7 @@ def get_loose_ents(preds, triples):
             for ent_list in per_sentence_ent_list:
                 ent = " ".join(tokenized_doc[ent_list[0]:ent_list[1]+1])
                 if ent not in previous_ents:
+                    ent = ent.replace('"', '')
                     loose_ents.append(ent)
 
     return loose_ents
@@ -110,7 +104,9 @@ def get_triples(preds):
     """
     Takes a list of dygiepp predictions (list of json-like dict) and returns 
     a list of triples present in the list, with any duplicates that may exist.
-
+    Removes any double quote marks, as these are non-escapable and special in 
+    the DOT format.
+    
     parameters:
         preds, list of dict: one dict per doc, minimally must contain the keys
             'sentences', 'predicted_ner_' and 'predicted_relations'
@@ -127,10 +123,15 @@ def get_triples(preds):
         # Get triples
         for per_sentence_rels_list in doc['predicted_relations']:
             for triple_list in per_sentence_rels_list:
-                rel = (" ".join(tokenized_doc[triple_list[0]:triple_list[1]+1]),
-                        triple_list[4],
-                        " ".join(tokenized_doc[triple_list[2]:triple_list[3]+1]))
-                triples.append(rel)
+                # Get the elements of the triple
+                head = " ".join(tokenized_doc[triple_list[0]:triple_list[1]+1])
+                rel = triple_list[4]
+                tail =  " ".join(tokenized_doc[triple_list[2]:triple_list[3]+1])
+                # Remove any double quote characters 
+                triple = (head.replace('"', ''), rel.replace('"', ''),
+                        tail.replace('"', ''))
+                # Add to the list of triples 
+                triples.append(triple)
     
     return triples
 
