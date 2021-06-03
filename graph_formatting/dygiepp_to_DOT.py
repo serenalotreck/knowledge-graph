@@ -10,45 +10,100 @@ Keeps the same file name as the dygiepp input, changes the ext to .dot
 """
 from os.path import abspath
 import argparse 
-
+from collections import defaultdict
 import jsonlines
 
 
-def get_loose_ents(preds):
+def write_dot_file(triples, loose_ents, graph_name, out_loc):
     """
-    Get all entities as a list from a set of dygiepp predictions.
+    Takes triples and loose entities, formats them for DOT, and 
+    writes to output file. 
+
+    parameters:
+        triples, list of 3-tuples: (head, relation, tail) triples
+        loose_ents, list of str: loose entities 
+        graph_name, str: filename for output file 
+        out_loc, str: path to save file 
+    
+    returns: None
+    """
+    triple_weights = defaultdict(int)
+    
+    # Get triple weights
+    for triple in triples:
+        triple_weights[triple] += 1
+    
+    # Format triples 
+    to_write = []
+    for triple, count in triple_weights.items():
+        # Remove any double quotes in the entities 
+        triple = (triple[0].replace('"', ' '), triple[1].replace('"', ' '),
+                triple[2].replace('"', ' '))
+        formatted_triple = f'"{triple[0]}" -> "{triple[2]}" [ label="{triple[1]}", weight={count} ];'
+        to_write.append(formatted_triple)
+    
+    trip_num = len(to_write)
+
+    # Add loose entities 
+    to_write += loose_ents
+    ent_num = len(to_write) - trip_num
+    print(f'\nThe graph has {trip_num} triples and {ent_num} additional entities.')
+
+    # Write to doc
+    with open(f'{out_loc}/{graph_name}.dot', 'w') as myfile:
+        myfile.write('digraph {\n')
+        for line in to_write:
+            myfile.write(f'    {line}\n')
+        myfile.write('}\n')
+
+def get_tokenized_doc(doc):
+    """
+    Helper for get_loose_ents and get_triples. Takes a dygiepp-formatted
+    doc and returns the text as a list of tokens. 
+
+    parameters:
+        doc, dict: dygiepp formatted doc 
+
+    returns: tokenized_doc, list of str: tokens in the doc
+    """
+    tokenized_doc = []
+    for sentence in doc['sentences']:
+        for word in sentence:
+            tokenized_doc.append(word)
+    
+    return tokenized_doc
+
+
+def get_loose_ents(preds, triples):
+    """
+    Get all entities  that are not included in a relation as a list from a set 
+    of dygiepp predictions.
 
     parameters:
         preds, list of dict: one dict per doc, minimally must contain the keys
             'sentences', 'predicted_ner_' and 'predicted_relations'
+        triples, list of 3-tuples: triples from the same set of preds
 
     returns: ents, list of str: entities 
     """
-
-    ## TODO 
-    # Clarify variable names 
-    # Consider combining this and the triples function to reduce number of loops
-
-
-    ents = []
+    # Get list of all entities already included in triples 
+    previous_ents = set()
+    for triple in triples:
+        previous_ents.add(triple[0])
+        previous_ents.add(triple[2])
+    
+    loose_ents = []
     for doc in preds:
         # Get tokenized document
-        for sentence in doc:
-            for word in sentence:
-                tokenized_doc.append(word)
+        tokenized_doc = get_tokenized_doc(doc)
 
-        ent_list = []
-        for sent_ent_list in doc['predicted_ner']:
-            entities = []
-            for ent_list in sent_ent_list:
+        for per_sentence_ent_list in doc['predicted_ner']:
+            for ent_list in per_sentence_ent_list:
                 ent = " ".join(tokenized_doc[ent_list[0]:ent_list[1]+1])
-                entities.append(ent)
+                if ent not in previous_ents:
+                    loose_ents.append(ent)
 
-            ent_list += entities
-
-        ents += ent_list
-
-    return ents
+    return loose_ents
 
 
 def get_triples(preds):
@@ -67,24 +122,20 @@ def get_triples(preds):
     triples = []
     for doc in preds:
         # Get full tokenized doc 
-        tokenized_doc = []
-        for sentence in doc['sentences']:
-            for word in sentence:
-                tokenized_doc.append(word)
+        tokenized_doc = get_tokenized_doc(doc)
+        
         # Get triples
-        for sent_rel_list in doc['predicted_relations']:
-            rels = []
-            for rel_list in sent_rel_list:
-                rel = (" ".join(tokenized_doc[rel_list[0]:rel_list[1]+1),
-                        rel_list[4],
-                        " ".join(tokenized_doc[rel_list[2]:rel_list[3]+1))
-                rels.append(rel)
-            triples += rels
-
+        for per_sentence_rels_list in doc['predicted_relations']:
+            for triple_list in per_sentence_rels_list:
+                rel = (" ".join(tokenized_doc[triple_list[0]:triple_list[1]+1]),
+                        triple_list[4],
+                        " ".join(tokenized_doc[triple_list[2]:triple_list[3]+1]))
+                triples.append(rel)
+    
     return triples
 
 
-def main(dygiepp_preds, out_loc):
+def main(dygiepp_preds, graph_name, out_loc):
 
     # Read in the data 
     print('\nReading in the data...\n')
@@ -103,22 +154,24 @@ def main(dygiepp_preds, out_loc):
             f'Docs to process: {len(preds)}')
 
     # Format the predictions as triples & loose entities 
+    print('\nFormatting predictions into triples and entities...\n')
     triples = get_triples(preds)
-    loose_ents = get_loose_ents(preds)
+    loose_ents = get_loose_ents(preds, triples)
     
     # Write to doc 
-
-    ## Picup here on Tuesday
-
-
+    print('\nWriting predictions to DOT file...\n')
+    write_dot_file(triples, loose_ents, graph_name, out_loc)    
+    print('\nDone!\n')
 
     
-if __name __ == "__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Put dygiepp output into DOT')
 
     parser.add_argument('-dygiepp_preds', type=str, 
             help='Path to file with dygiepp output')
+    parser.add_argument('-graph_name', type=str, 
+            help='Filename for dot file')
     parser.add_argument('-out_loc', type=str,
             help='Path tp save the output')
 
@@ -127,4 +180,4 @@ if __name __ == "__main__":
     args.dygiepp_preds = abspath(args.dygiepp_preds)
     args.out_loc = abspath(args.out_loc)
 
-    main(args.dygiepp_preds, args.out_loc)
+    main(args.dygiepp_preds, args.graph_name, args.out_loc)
