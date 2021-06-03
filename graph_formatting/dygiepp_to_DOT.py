@@ -69,8 +69,7 @@ def get_tokenized_doc(doc):
 def get_loose_ents(preds, triples):
     """
     Get all entities  that are not included in a relation as a list from a set 
-    of dygiepp predictions. Removes any double quote marks, as these are 
-    non-escapable and special in the DOT format.
+    of dygiepp predictions. 
 
     parameters:
         preds, list of dict: one dict per doc, minimally must contain the keys
@@ -94,7 +93,6 @@ def get_loose_ents(preds, triples):
             for ent_list in per_sentence_ent_list:
                 ent = " ".join(tokenized_doc[ent_list[0]:ent_list[1]+1])
                 if ent not in previous_ents:
-                    ent = ent.replace('"', '')
                     loose_ents.append(ent)
 
     return loose_ents
@@ -104,8 +102,6 @@ def get_triples(preds):
     """
     Takes a list of dygiepp predictions (list of json-like dict) and returns 
     a list of triples present in the list, with any duplicates that may exist.
-    Removes any double quote marks, as these are non-escapable and special in 
-    the DOT format.
     
     parameters:
         preds, list of dict: one dict per doc, minimally must contain the keys
@@ -127,10 +123,8 @@ def get_triples(preds):
                 head = " ".join(tokenized_doc[triple_list[0]:triple_list[1]+1])
                 rel = triple_list[4]
                 tail =  " ".join(tokenized_doc[triple_list[2]:triple_list[3]+1])
-                # Remove any double quote characters 
-                triple = (head.replace('"', ''), rel.replace('"', ''),
-                        tail.replace('"', ''))
                 # Add to the list of triples 
+                triple = (head, rel, tail)
                 triples.append(triple)
     
     return triples
