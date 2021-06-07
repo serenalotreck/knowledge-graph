@@ -68,39 +68,45 @@ def keyword_cluster_filter(graph, keywords):
     returns:
         graph_copy, pgv AGraph instance: the filtered graph
     """
-    ## TODO: Find the bug in here, see lab notebook 
+    graph_copy = graph.copy()
     for node in graph_copy.nodes():
-        
-        # Check if node is one of the keywords
-        if node not in keywords:
 
-            # Check if any keywords are connected to the node
-            if graph_copy.neighbors(node) != []:
-                
-                connected = False
-                done = False
-                while not done: # Until we find a connection to a keyword, 
-                                # or go through all keywords 
-                    for keyword in keywords:
+        # Account for the fact that we might have deleted this with another cluster
+        if node in graph_copy.nodes():
+            
+            # Check if node is one of the keywords
+            if node not in keywords:
 
-                        # Check if it's connected to this keyword
-                        if keyword in graph_copy.predecessors(node) \
-                                or graph_copy.successors(node):
-                            
-                            connected = True
-                            done = True
+                # Check if any keywords are connected to the node
+                if graph_copy.neighbors(node) != []:
                     
-                    done = True
-            
-                if not connected:
-
-                    graph_copy.delete_node(node)
-            
-            else: 
+                    connected = False
+                    done = False
+                    
+                    while not done: # Until we find a connection to a keyword, 
+                                    # or go through all keywords 
+                        for keyword in keywords:
+                            
+                            # Check if it's connected to this keyword
+                            if (keyword in graph_copy.predecessors(node)) or  \
+                                    (keyword in graph_copy.successors(node)):
+                                
+                                connected = True
+                                done = True
+                        
+                        done = True
+                    
+                    if not connected:
+                        
+                        all_connections = graph_copy.predecessors(node) + \
+                                            graph_copy.successors(node)
+                        graph_copy.delete_nodes_from(all_connections)
                 
-                graph_copy.delete_node(node)
+                else: 
+                    
+                    graph_copy.delete_node(node)
 
-    return graph_copy 
+        return graph_copy 
 
 
 def random_num_filter(graph, num):
@@ -118,19 +124,18 @@ def random_num_filter(graph, num):
     returns:
         new_graph, pgv AGraph instance: the filtered graph
     """
-    graph_copy = graph.copy()
-
     # Get random nodes and leftovers 
-    random_nodes = sample(graph_copy.nodes(), num)
-    not_selected_nodes = [node for node in graph_copy.nodes() if node not in random_nodes]
-
+    all_nodes = graph.nodes()
+    random_nodes = sample(all_nodes, num)
+    not_selected_nodes = [node for node in all_nodes if node not in random_nodes]
+    
     # Make new graph to add the chosen nodes and triples 
     new_graph = pgv.AGraph()
 
     # Add nodes to new graph 
     for node in random_nodes:
 
-        neighbors = graph_copy.neighbors(node)
+        neighbors = graph.neighbors(node)
         # If the node has neighbors, choose random triple
         if neighbors != []:
             
@@ -139,18 +144,17 @@ def random_num_filter(graph, num):
 
             # Check if random choice is in the original list of len(num)
             if random_neighbor in random_nodes:
-
                 # Remove it and replace it with another 
-                new_node = sample(not_selected_nodes, 1) # Get new node 
+                new_node = sample(not_selected_nodes, 1)[0] # Get new node 
                 not_selected_nodes.remove(new_node)      # Remove from those not selected
                 random_nodes.remove(node)                # Remove the old node from chosen list
                 random_nodes.append(new_node)            # Add new node to chosen list
-
+            
             # Get edge label & add triple to new graph
-            if random_neighbor in graph_copy.predecessors(node):
-                edge = graph_copy.get_edge(random_neighbor, node)
+            if random_neighbor in graph.predecessors(node):
+                edge = graph.get_edge(random_neighbor, node)
             else:
-                edge = graph_copy.get_edge(node, random_neighbor)
+                edge = graph.get_edge(node, random_neighbor)
             edge_label = edge.attr["label"]
             new_graph.add_edge(node, random_neighbor, label=edge_label) # Nodes are added if not 
                                                                         # already present
@@ -236,6 +240,11 @@ def main(dot_file, filter_type, keywords, num, remove_ents, out_loc):
     # Read in dot file 
     print('\nReading in dot file...\n')
     graph = read_dot(dot_file, remove_ents)
+    
+    # Get name for "full" graph file 
+    if remove_ents:
+        ent_name = 'no_loose_ents'
+    else: ent_name = 'all_ents'
 
     # Get basename for later 
     print('\nGetting basename...')
@@ -249,6 +258,7 @@ def main(dot_file, filter_type, keywords, num, remove_ents, out_loc):
        
         # Do a keyword and number warning 
         check_keywords(graph, keywords)
+        print(f'Keywords are: {keywords}')
         check_number(graph, num)
 
         print('Performing keyword direct filter...')
@@ -258,7 +268,7 @@ def main(dot_file, filter_type, keywords, num, remove_ents, out_loc):
         print('Performing random number filter...')
         random_num_graph = random_num_filter(graph, num)
 
-        graphs = {f'full_{base_graph_name}':graph,
+        graphs = {f'{ent_name}_{base_graph_name}':graph,
                     f'keyword_direct_{base_graph_name}':key_direct_graph,
                     f'keyword_cluster_{base_graph_name}':key_cluster_graph,
                     f'random_num_{base_graph_name}':random_num_graph}
@@ -268,24 +278,25 @@ def main(dot_file, filter_type, keywords, num, remove_ents, out_loc):
             
             # Keyword check 
             check_keywords(graph, keywords)
-            
+            print(f'Keywords are: {keywords}')
             print('Performing keyword direct filter...')
 
             key_direct_graph = keyword_direct_filter(graph, keywords)
             
-            graphs = {f'full_{base_graph_name}':graph,
+            graphs = {f'{ent_name}_{base_graph_name}':graph,
                         f'keyword_direct_{base_graph_name}':key_direct_graph}
     
         elif filter_type == "keyword_cluster":
             
             # Keyword check
             check_keywords(graph, keywords)
+            print(f'Keywords are: {keywords}')
 
             print('Performing keyword cluster filter...')
             
             key_cluster_graph = keyword_cluster_filter(graph, keywords)
 
-            graphs = {f'full_{base_graph_name}':graph,
+            graphs = {f'{ent_name}_{base_graph_name}':graph,
                         f'keyword_cluster_{base_graph_name}':key_cluster_graph}
 
         elif filter_type == "random_num":
@@ -335,9 +346,9 @@ if __name__ == '__main__':
     parser.add_argument('-num', type=int,
             help='Number of entries to select. Required if -filter_type is '
                 '"random_num".', default=0)
-    parser.add_argument('-remove_ents', action='store_true',
-            help='True/False, Removes loose entities from the graph. Default '
-            'is True.')
+    parser.add_argument('--remove_ents', action='store_true',
+            help='Removes loose entities from the graph if this flag is '
+            'specified.')
     parser.add_argument('-out_loc', type=str,
             help='Path to save the filtered dot file')
 

@@ -12,7 +12,7 @@ from os.path import abspath
 import argparse 
 from collections import defaultdict
 import jsonlines
-from graphviz import Digraph 
+import pygraphviz as pgv 
 
 
 def write_dot_file(triples, loose_ents, graph_name, out_loc):
@@ -27,7 +27,7 @@ def write_dot_file(triples, loose_ents, graph_name, out_loc):
         out_loc, str: path to save file 
     """
     # Instatiate the graph 
-    dot = Digraph(comment=graph_name)
+    dot = pgv.AGraph(directed=True, name=graph_name)
 
     # Get triple weights
     triple_weights = defaultdict(int)
@@ -37,15 +37,16 @@ def write_dot_file(triples, loose_ents, graph_name, out_loc):
     
     # Add triples 
     for triple, weight in triple_weights.items():
-        dot.edge(triple[0], triple[2], label=triple[1], 
+
+        dot.add_edge(triple[0], triple[2], label=triple[1], 
                 weight=f'{weight}')
 
     # Add entities 
     for entity in loose_ents:
-        dot.node(entity)
+        dot.add_node(entity)
 
     # Save the file 
-    dot.save(f'{out_loc}/{graph_name}.gv')
+    dot.write(f'{out_loc}/{graph_name}.gv')
 
 
 def get_tokenized_doc(doc):
@@ -119,12 +120,16 @@ def get_triples(preds):
         # Get triples
         for per_sentence_rels_list in doc['predicted_relations']:
             for triple_list in per_sentence_rels_list:
+                
                 # Get the elements of the triple
                 head = " ".join(tokenized_doc[triple_list[0]:triple_list[1]+1])
                 rel = triple_list[4]
                 tail =  " ".join(tokenized_doc[triple_list[2]:triple_list[3]+1])
+                
                 # Add to the list of triples 
                 triple = (head, rel, tail)
+                
+                # Add the triple to the graph
                 triples.append(triple)
     
     return triples
