@@ -306,7 +306,7 @@ def main(dot_file, filter_type, keywords, num, remove_ents, out_loc):
             
             print('Performing random number filter...')
 
-            random_num_graph = randon_num_filter(graph, num)
+            random_num_graph = random_num_filter(graph, num)
             
             graphs = {f'full_{base_graph_name}':graph,
                         f'random_num_{base_graph_name}':random_num_graph}
