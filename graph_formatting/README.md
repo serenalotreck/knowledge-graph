@@ -7,6 +7,8 @@ For use with the output of [dygiepp](https://github.com/dwadden/dygiepp). Makes 
 <br>
 Usage: 
 ```
+python dygiepp_to_DOT.py -dygiepp_preds ../data/first_manuscript_data/dygiepp/pretrained_output/no_punct_ACE05_predictions.jsonl -graph_name noPunct_ACE05_all -out_loc ../data/first_manuscript_data/dot_files/
+
 ```
 ### `graph_filtering.py` 
 Offers several options for filtering the main KG produced by `dygiepp_to_DOT.py`. Options include:
