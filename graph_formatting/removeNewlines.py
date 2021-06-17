@@ -7,17 +7,17 @@ Example:
     nodeA -- nodeB [label="label", 
             weight=num];
 
-causes Cytoscape to not be able to read in the file. Need to change this to
+becomes
 
     nodeA -- nodeB [label="label", weight=num];
 
-The newline characters don't pose an issue for using actual GraphViz, but
-it prevents the import to Cytoscape. Unclear why this is the case, but rather 
-than delving into dot-app/Cytoscape troubleshooting, writing this quick and 
-dirty way of dealing with the issue for now.
+This script was originally written because it seemed like these extra
+newlines were causing import errors in Cytoscape. While this is not 
+actually the case (error still undiagnosed as of 17 June 2021), the 
+DOT files are much more readable without the extra newlines. 
 
-Removes all newlines that don't directly follow a semicolon.
-Makes new file with the name "noNewline_{original file name}"
+Removes all newlines that don't directly follow a semicolon or the opening
+curly brace. Makes new file with the name "noNewline_{original file name}"
 
 Author: Serena G. Lotreck
 """
