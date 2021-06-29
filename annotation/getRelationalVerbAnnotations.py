@@ -27,6 +27,8 @@ Author: Serena G. Lotreck
 import argparse
 import os 
 import jsonlines
+import DocClass as dc
+
 
 def main(dygiepp_output, out_loc):
 
@@ -38,11 +40,11 @@ def main(dygiepp_output, out_loc):
             dygiepp_dicts.append(obj)
 
     # Make a class instance for each doc & use methods to get annotations
-    print('Getting adn writin gout annotations...\n')
+    print('Getting and writing out annotations...\n')
     for doc_dict in dygiepp_dicts:
-        doc = Doc(doc_dict, out_loc)
+        doc = dc.Doc(doc_dict, out_loc)
         doc.get_anns()
-        doc.write_anns()
+        doc.write_ann()
         doc.write_txt()
 
     print('Done!\n')

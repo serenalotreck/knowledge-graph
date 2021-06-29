@@ -28,7 +28,7 @@ class Doc:
 
 
     @staticmethod
-    def get_verbs(sentence):
+    def get_verbs(sentence, nlp):
         """
         Get the verbs in a sentence. 
 
@@ -48,34 +48,41 @@ class Doc:
         for token in sent:
             if token.pos_ == 'VERB':
                 verbs.append((token.text, token_idx)) # Trusting that spaCy tokenization is consistent
-        
+            token_idx += 1 
         return verbs
 
 
-    @staticmethod
-    def get_between_verbs(relation, verbs):
+    def get_between_verbs(self, relation, verbs, sentence_num):
         """
         Get the verbs that come between two entities in a relation.
 
         parameters:
             relation, list: [start_tok1, end_tok1, start_tok2, end_tok2, "TYPE", logit, softmax]
             verbs, list of tuple: [(verb, token_idx), ...]
+            sentence_num, int: index of the sentence list within self.sentences
 
         returns:
             relation, list: 
                 [start_tok1, end_tok1, start_tok2, end_tok2, "TYPE", logit, softmax, verb1_tok_idx, verb2_tok_idx...]
         """
+        # Convert the within-sentence token index for relation verbs
+        updated_verbs = []
+        for verb in verbs:
+            new_idx = sum(len(i) for i in self.sentences[:sentence_num]) + verb[1]
+            updated_verbs.append((verb[0], new_idx))
+        
+        # Check for in between verbs 
         between_verbs = []
         if relation[1] < relation[3]:
-            for verb in verbs:
+            for verb in updated_verbs:
                 if relation [1] < verb[1] < relation[3]:
                     between_verbs.append(verb)
 
         elif relation[1] > relation[3]:
-            for verb in verbs: 
-                if relation [3] < verb[1] < relation[1]:
+            for verb in updated_verbs:
+                if relation [3] < verb[1] < relation[0]:
                     between_verbs.append(verb)
-
+        
         for verb in between_verbs:
             relation.append(verb[1])
 
@@ -108,6 +115,7 @@ class Doc:
         nlp = spacy.load("en_core_sci_sm")
 
         # Get annotations
+        sent_num = 0
         num_T = 0
         num_R = 0
         num_chars = 0 # Keeps track of how many total characters were in previous sentences 
@@ -116,16 +124,16 @@ class Doc:
             
             # Get a string with the sentence
             sentence_str = " ".join(sentence)
-
+            
             # Get all verbs in a sentence
-            verbs = get_verbs(sentence, nlp)
+            verbs = Doc.get_verbs(sentence_str, nlp)
 
             # Go through relations in the sentence 
             for relation in relation_list:
 
                 # Check if verbs come between entities
-                between_verbs = get_between_verbs(relation, verbs)
-
+                relation = self.get_between_verbs(relation, verbs, sent_num)
+                
                 # Get the annotations 
                 ## Entities 
                 ### Entity indices are in terms of tokens in the whole document
@@ -136,26 +144,30 @@ class Doc:
                     ent_text = " ".join(self.unraveled_sentences[relation[ent_num-1]:relation[ent_num]+1])
                     ent_len = len(ent_text)
                     ent_end = ent_start + ent_len
-                    annotation = [sentence_str, f'T{num_T}', "ENTITY", ent_start, end_end, ent_text]  
+                    annotation = [sentence_str, f'T{num_T}', "ENTITY", ent_start, ent_end, ent_text]  
                     anns.append(annotation)
                     ent_IDs.append(f'T{num_T}')
 
+
                 ## Text-bound relational verbs
                 ### Verb indices are in terms of this single sentence
-                num_T += 1
-                rel_start = num_chars + sum(len(i) for i in sentence[:relation[7]])
-                rel_text = " ".join(sentence[relation[7]:relation[-1]+1])
-                rel_len = len(rel_text)
-                rel_end = rel_start + rel_len
-                annotation = [sentence_str, f'T{num_T}', relation[4], rel_start, rel_end, rel_text]
-                anns.append(annotation)
-
+                if len(relation) >= 8:
+                    num_T += 1
+                    rel_start = num_chars + sum(len(i) for i in sentence[:relation[7]])
+                    rel_text = " ".join(sentence[relation[7]:relation[-1]+1])
+                    rel_len = len(rel_text)
+                    rel_end = rel_start + rel_len
+                    annotation = [sentence_str, f'T{num_T}', relation[4], rel_start, rel_end, rel_text]
+                    anns.append(annotation)
+                
                 ## Non-text-bound relations
                 num_R += 1
-                annotation = [sentence_str, f'R{num_R}', relation[4], f'Arg1:{entIDs[0]}', f'Arg2:{entIDs[1]}']
+                annotation = [sentence_str, f'R{num_R}', relation[4], 
+                        f'Arg1:{ent_IDs[0]}', f'Arg2:{ent_IDs[1]}']
                 anns.append(annotation)
 
             num_chars += len(sentence_str) + 1 # To account for newline between each sentence
+            sent_num += 1
 
         self.anns += anns
 
