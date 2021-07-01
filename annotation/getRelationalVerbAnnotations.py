@@ -41,12 +41,19 @@ def main(dygiepp_output, out_loc):
 
     # Make a class instance for each doc & use methods to get annotations
     print('Getting and writing out annotations...\n')
-    for doc_dict in dygiepp_dicts:
+    verbs = []
+    for i, doc_dict in enumerate(dygiepp_dicts):
+        print(f'\nUnpacking document {i}\n')
         doc = dc.Doc(doc_dict, out_loc)
         doc.get_anns()
+        verbs += doc.relation_verbs
         doc.write_ann()
         doc.write_txt()
 
+    print('Writing out verb list...\n')
+    with open(f'{out_loc}/relation_verb_list.txt', 'w') as myfile:
+        myfile.write('\n'.join(verbs))
+        
     print('Done!\n')
 
 

@@ -24,6 +24,7 @@ class Doc:
         self.relations = doc_dict['predicted_relations']
         self.doc_key = doc_dict['doc_key']
         self.anns = []
+        self.relation_verbs = []
         self.out_loc = out_loc
 
 
@@ -55,6 +56,7 @@ class Doc:
     def get_between_verbs(self, relation, verbs, sentence_num):
         """
         Get the verbs that come between two entities in a relation.
+        Returns a list of updated relations, and also updates the self.verbs attribute. 
 
         parameters:
             relation, list: [start_tok1, end_tok1, start_tok2, end_tok2, "TYPE", logit, softmax]
@@ -85,6 +87,7 @@ class Doc:
         
         for verb in between_verbs:
             relation.append(verb[1])
+            self.relation_verbs.append(verb[0])
 
         return relation
 
@@ -118,7 +121,6 @@ class Doc:
         sent_num = 0
         num_T = 0
         num_R = 0
-        num_chars = 0 # Keeps track of how many total characters were in previous sentences 
         anns = []
         for relation_list, sentence in zip(self.relations, self.sentences):
             
@@ -127,7 +129,7 @@ class Doc:
             
             # Get all verbs in a sentence
             verbs = Doc.get_verbs(sentence_str, nlp)
-
+            
             # Go through relations in the sentence 
             for relation in relation_list:
 
@@ -140,7 +142,9 @@ class Doc:
                 ent_IDs = []
                 for ent_num in (1, 3):
                     num_T += 1
-                    ent_start = sum(len(i) for i in self.unraveled_sentences[:relation[ent_num]])
+                    ent_start = len(" ".join(self.unraveled_sentences[:relation[ent_num]]))
+                    if ent_start != 0:
+                        ent_start += 1 # Account for the trailing spaces not added by " ".join()
                     ent_text = " ".join(self.unraveled_sentences[relation[ent_num-1]:relation[ent_num]+1])
                     ent_len = len(ent_text)
                     ent_end = ent_start + ent_len
@@ -148,13 +152,14 @@ class Doc:
                     anns.append(annotation)
                     ent_IDs.append(f'T{num_T}')
 
-
                 ## Text-bound relational verbs
                 ### Verb indices are in terms of this single sentence
                 if len(relation) >= 8:
                     num_T += 1
-                    rel_start = num_chars + sum(len(i) for i in sentence[:relation[7]])
-                    rel_text = " ".join(sentence[relation[7]:relation[-1]+1])
+                    rel_start = len(" ".join(self.unraveled_sentences[:relation[7]]))
+                    if rel_start != 0:
+                        rel_start += 1 # Account for the trailing spaces not added by " ".join()
+                    rel_text = " ".join(self.unraveled_sentences[relation[7]:relation[-1]+1])
                     rel_len = len(rel_text)
                     rel_end = rel_start + rel_len
                     annotation = [sentence_str, f'T{num_T}', relation[4], rel_start, rel_end, rel_text]
@@ -166,7 +171,6 @@ class Doc:
                         f'Arg1:{ent_IDs[0]}', f'Arg2:{ent_IDs[1]}']
                 anns.append(annotation)
 
-            num_chars += len(sentence_str) + 1 # To account for newline between each sentence
             sent_num += 1
 
         self.anns += anns
@@ -200,4 +204,3 @@ class Doc:
 
         with open(f'{self.out_loc}/{self.doc_key}_rel_sentences.txt', 'w') as myfile:
             myfile.write(sentences_str)
-
