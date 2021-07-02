@@ -24,6 +24,7 @@ class Doc:
         self.relations = doc_dict['predicted_relations']
         self.doc_key = doc_dict['doc_key']
         self.anns = []
+        self.annotated_sentences = ''
         self.relation_verbs = []
         self.out_loc = out_loc
 
@@ -53,6 +54,66 @@ class Doc:
         return verbs
 
 
+    def get_rel_verb_anns(self, relation, num_T, anns, sentence, sentence_str):
+        """
+        Get relational verb annotation for a relation.
+        This function is badly compartmentalized and I know it, 
+        just wanted to clean up the parent function a bit.
+
+        returns:
+            (num_T, anns): (int, list)
+        """
+        if len(relation) >= 8:
+            num_T += 1
+            # Get relation start within the annotated sentences using the per-sentence index 
+            rel_start = len(self.annotated_sentences) + \
+                        len(" ".join(sentence[:relation[7]]))
+            if rel_start != 0:
+                rel_start += 1 # Account for the trailing spaces not added by " ".join()
+            rel_text = " ".join(sentence[relation[7]:relation[-1]+1])
+            rel_len = len(rel_text)
+            rel_end = rel_start + rel_len
+            annotation = [sentence_str, f'T{num_T}', relation[4], rel_start, rel_end, rel_text]
+            anns.append(annotation)
+    
+        return (num_T, anns)
+
+    
+    def get_entity_anns(self, relation, num_T, anns, sentence, sentence_str):
+        """
+        Get entity annotations for a relation.
+        This function is badly compartmentalized and I know it, 
+        just wanted to clean up the parent function a bit.
+        
+        returns:
+            (ent_IDs, num_T, anns): (list, int, list)
+        """
+        ent_IDs = []
+        for ent_num in (0, 2):
+            num_T += 1
+            # Convert entity index to a per-sentence index
+            current_sent_idx = self.sentences.index(sentence) # Assumes all sentences are unique
+            previous_sent_token_num = sum(len(i) for i in self.sentences[:current_sent_idx])
+            per_sent_token_start_idx = relation[ent_num] - previous_sent_token_num
+            # Get entity start within the annotated sentences using the per-sentence index 
+            ent_start = len(self.annotated_sentences) + \
+                        len(" ".join(sentence[:per_sent_token_start_idx]))
+            if ent_start != 0 and ent_start != len(self.annotated_sentences):
+                ent_start += 1 # Account for the trailing spaces not added by " ".join()
+            # Get entity text
+            ent_text = " ".join(self.unraveled_sentences[relation[ent_num]:relation[ent_num+1]+1])
+            # Get entity end 
+            ent_len = len(ent_text)
+            ent_end = ent_start + ent_len
+            # Generate annotation 
+            annotation = [sentence_str, f'T{num_T}', "ENTITY", ent_start, ent_end, ent_text]  
+            # Update ID list and text-bound annotation numbers
+            anns.append(annotation)
+            ent_IDs.append(f'T{num_T}')
+
+        return (ent_IDs, num_T, anns)
+
+
     def get_between_verbs(self, relation, verbs, sentence_num):
         """
         Get the verbs that come between two entities in a relation.
@@ -78,11 +139,13 @@ class Doc:
         if relation[1] < relation[3]:
             for verb in updated_verbs:
                 if relation [1] < verb[1] < relation[3]:
+                    verb = [i for i in verbs if verb[0] == i[0]][0] # Use per-sentence index for further processing
                     between_verbs.append(verb)
 
         elif relation[1] > relation[3]:
             for verb in updated_verbs:
                 if relation [3] < verb[1] < relation[0]:
+                    verb = [i for i in verbs if verb[0] == i[0]][0] # Use per-sentence index for further processing
                     between_verbs.append(verb)
         
         for verb in between_verbs:
@@ -124,55 +187,42 @@ class Doc:
         anns = []
         for relation_list, sentence in zip(self.relations, self.sentences):
             
-            # Get a string with the sentence
-            sentence_str = " ".join(sentence)
-            
-            # Get all verbs in a sentence
-            verbs = Doc.get_verbs(sentence_str, nlp)
-            
-            # Go through relations in the sentence 
-            for relation in relation_list:
+            # Check if the sentence has relations 
+            if len(relation_list) != 0:
 
-                # Check if verbs come between entities
-                relation = self.get_between_verbs(relation, verbs, sent_num)
+                # Get a string with the sentence
+                sentence_str = " ".join(sentence) + " "
                 
-                # Get the annotations 
-                ## Entities 
-                ### Entity indices are in terms of tokens in the whole document
-                ent_IDs = []
-                for ent_num in (1, 3):
-                    num_T += 1
-                    ent_start = len(" ".join(self.unraveled_sentences[:relation[ent_num]]))
-                    if ent_start != 0:
-                        ent_start += 1 # Account for the trailing spaces not added by " ".join()
-                    ent_text = " ".join(self.unraveled_sentences[relation[ent_num-1]:relation[ent_num]+1])
-                    ent_len = len(ent_text)
-                    ent_end = ent_start + ent_len
-                    annotation = [sentence_str, f'T{num_T}', "ENTITY", ent_start, ent_end, ent_text]  
-                    anns.append(annotation)
-                    ent_IDs.append(f'T{num_T}')
-
-                ## Text-bound relational verbs
-                ### Verb indices are in terms of this single sentence
-                if len(relation) >= 8:
-                    num_T += 1
-                    rel_start = len(" ".join(self.unraveled_sentences[:relation[7]]))
-                    if rel_start != 0:
-                        rel_start += 1 # Account for the trailing spaces not added by " ".join()
-                    rel_text = " ".join(self.unraveled_sentences[relation[7]:relation[-1]+1])
-                    rel_len = len(rel_text)
-                    rel_end = rel_start + rel_len
-                    annotation = [sentence_str, f'T{num_T}', relation[4], rel_start, rel_end, rel_text]
-                    anns.append(annotation)
+                # Get all verbs in a sentence
+                verbs = Doc.get_verbs(sentence_str, nlp)
                 
-                ## Non-text-bound relations
-                num_R += 1
-                annotation = [sentence_str, f'R{num_R}', relation[4], 
-                        f'Arg1:{ent_IDs[0]}', f'Arg2:{ent_IDs[1]}']
-                anns.append(annotation)
+                # Go through relations in the sentence 
+                for relation in relation_list:
 
+                    # Check if verbs come between entities
+                    relation = self.get_between_verbs(relation, verbs, sent_num)
+                    
+                    # Get the annotations 
+                    ## Entities 
+                    ent_IDs, num_T, anns = self.get_entity_anns(relation, num_T, 
+                                            anns, sentence, sentence_str)
+
+                    ## Text-bound relational verbs
+                    num_T, anns = self.get_rel_verb_anns(relation, num_T, anns, 
+                                            sentence, sentence_str)           
+
+                    ## Non-text-bound relations
+                    num_R += 1
+                    annotation = [sentence_str, f'R{num_R}', relation[4], 
+                            f'Arg1:{ent_IDs[0]}', f'Arg2:{ent_IDs[1]}']
+                    anns.append(annotation)
+
+                # Add sentence to annotated sentences attribute 
+                self.annotated_sentences += sentence_str
+            
             sent_num += 1
 
+        
         self.anns += anns
 
         return self.anns
@@ -199,8 +249,17 @@ class Doc:
         Write out corresponding .txt file for this document. 
         Only contains sentences that have relations in them.
         """
-        sentences = set([ann[0] for ann in self.anns])
-        sentences_str = '\n'.join(sentences)
+        # Go through sentences in order, add to list to write if that 
+        # sentence has annotations -- keeps the sentences in the correct order
+        all_sents = [" ".join(sent) + " " for sent in self.sentences]
+        ann_sentences = set([ann[0] for ann in self.anns])
+        sents_to_write = []
+        for sent in all_sents:
+            if sent in ann_sentences:
+                sents_to_write.append(sent[:-1])
+
+        # Make one string to write
+        sents_to_write_str = '\n'.join(sents_to_write)
 
         with open(f'{self.out_loc}/{self.doc_key}_rel_sentences.txt', 'w') as myfile:
-            myfile.write(sentences_str)
+            myfile.write(sents_to_write_str)
