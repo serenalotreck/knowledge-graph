@@ -6,6 +6,7 @@ scispaCy medium model should be installed in order to use this class.
 Author: Serena G. Lotreck
 """
 import spacy
+import numpy as np 
 
 class Doc:
 
@@ -22,11 +23,62 @@ class Doc:
 
         self.sentences = doc_dict['sentences']
         self.relations = doc_dict['predicted_relations']
+        self.ner = doc_dict['predicted_ner']
         self.doc_key = doc_dict['doc_key']
         self.anns = []
         self.annotated_sentences = ''
         self.relation_verbs = []
         self.out_loc = out_loc
+
+    
+    def get_entity_overlap(self):
+        """
+        Quantify the percentage of entities involved in relations that 
+        are not extracted in ner. 
+        
+        returns: (percent_ent, percent_rels)
+            tuple with the two calculated percentages 
+        
+        NOTE: if the calculation of the percentage would have resulted in a 
+        division by 0 (e.g. if there are no entities or relations for the doc)
+        None will be returned instead of an integer.
+        """
+        # Get doc-wise indices for ner-extracted entities 
+        ent_idxs = [(i[0], i[1]) for sentence in self.ner for i in sentence]
+        
+        # Get doc-wise indices for relation-extracted entities
+        rel_idxs_head = [(i[0], i[1]) for sentence in self.relations for i in sentence]
+        rel_idxs_tail = [(i[2], i[3]) for sentence in self.relations for i in sentence]
+        rel_idxs = rel_idxs_head + rel_idxs_tail
+        
+        # Check how many entities are in the relations list
+        ent_in_rels = 0
+        total_ents = 0
+        for ent in ent_idxs:
+            if ent in rel_idxs:
+                ent_in_rels += 1
+            total_ents += 1
+
+        # Check how many relation entities are in the ner list 
+        rel_ent_in_ent = 0
+        total_rel_ents = 0 
+        for rel_ent in rel_idxs:
+            if rel_ent in ent_idxs:
+                rel_ent_in_ent += 1
+            total_rel_ents += 1
+        
+        # Calculate percentages 
+        ## The percentage of entities extracted in ner that were used in relations
+        if len(ent_idxs) > 0:
+            percent_ent = (ent_in_rels/total_ents)*100
+        else: percent_ent = None
+
+        ## The percentage of entities used in relations that were also extracted with ner 
+        if len(rel_idxs) > 0:
+            percent_rels = (rel_ent_in_ent/total_rel_ents)*100
+        else: percent_rels = None
+
+        return (percent_ent, percent_rels) 
 
 
     @staticmethod
