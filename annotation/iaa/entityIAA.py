@@ -72,7 +72,7 @@ def main(project_dir):
     biaa.iaa_report(instance_f1)
 
     # Token-level agreement 
-    token_f1 = biaa.comput_f1_agreement(project_dir, token_func=tokenizer)
+    token_f1 = biaa.compute_f1_agreement(project_dir, token_func=tokenizer)
     biaa.iaa_report(token_f1)
 
 
