@@ -29,7 +29,8 @@ The file reading procedure here is not nearly as nice or generous as the one
 for bratiaa; the iaa_dirs must all have the same name, and you have to 
 provide that name, and annotator directories have to be in the first level 
 of the overall directory, and the iaa_dir must be in the first level of the 
-annotator directories. 
+annotator directories. The iaa_dir must also contain the same files for all
+annotators; this script doesn't handle non-overlapping files or missing files.
 
 Author: Serena G. Lotreck
 """
@@ -44,8 +45,33 @@ def get_iaa_stats(annotator_pairs_iaas):
     """
     Calculate mean and SD for the IAA's for each pair, and also 
     over all annotators.
+    
+    parameters:
+        annotator_pairs_iaas, dict of dict: key is annotator pair, value
+            is a dict where key is document name and value is the iaa score for that document
+    
+    Prints a report with the per-doc and overall iaa 
     """
-    pass 
+    # Make nested dict into a multiindex dataframe for more efficient handling
+    reformed = {(outerKey, innerKey): values for outerKey, innerDict 
+            in annotator_pairs_iaas.items() for innerKey, values 
+            in innerDict.items()}
+    iaas_df = pd.DataFrame(reformed).T.rename({0:'iaa'}, axis=1)
+
+    # Get the per-document iaa 
+    per_doc = iaas_df.groupby(level=1).agg({'iaa':['mean', 'std']})
+
+    # Get the overall iaa 
+    overall = iaas_df.agg({'iaa':['mean','std']})
+
+    # Print report 
+    print('Relation IAA report')
+    print('-----------------------------------------')
+    print('Per-Document IAA:')
+    print(per_doc)
+    print('-----------------------------------------')
+    print('Overall IAA:')
+    print(f'Mean: {overall.mean}, Standard deviation: {overall.std}')
 
 
 def calculate_f1(a,b,c):
@@ -119,6 +145,68 @@ def calculate_iaa(ann_df1, ann_df2, tolerance='STRICT'):
     return calculate_f1(a, b, c)
 
 
+def format_relation(entry, line_dict):
+    """
+    Helper for make_ann_df. 
+
+    parameters:
+        entry, str: the relation line from the .ann file, starting with the 
+            first tab character
+        line_dict, dict: keys are ID's from the .ann file, values are the 
+            lines starting with the first tab character
+
+    returns:
+        relation, list: relation with components as list elements 
+
+    I'm sorry world for writing such an ugly function >.<
+    """
+    relation = []
+    
+    # Get index of first space, this is the end of the type 
+    type_end_idx = entry.index(' ')
+    
+    # Put type in relation list 
+    relation.append(entry[:type_end_idx])
+    
+    # Look for first argument in dict 
+    arg1_start_idx = type_end_idx + 6
+    arg1_end_idx = entry.index(' ', type_end_idx+1)
+    arg1_id = entry[arg1_start_idx:arg1_end_idx]
+    arg1_entry = line_dict[arg1_id] 
+
+    # Look for second argument in dict
+    arg2_start_idx = arg1_end_idx + 6
+    arg2_id = entry[arg2_start_idx:].strip()
+    arg2_entry = line_dict[arg2_id]
+    
+    # Format args 
+    for arg_entry in (arg1_entry, arg2_entry):
+        
+        if ';' not in arg_entry:
+            
+            # Get entity offsets
+            print(arg_entry)
+            start_offset_start_idx = arg_entry.index(' ') + 1
+            in_between_space = arg_entry.index(' ', start_offset_start_idx)
+            end_offset_end_idx = arg_entry.index('\t', in_between_space+1)
+            start_offset = int(arg_entry[start_offset_start_idx:in_between_space])
+            print(arg_entry[in_between_space+1:end_offset_end_idx])
+            end_offset = int(arg_entry[in_between_space+1:end_offset_end_idx])
+            
+            # Get entity type 
+            ent_type = arg_entry[:start_offset_start_idx-1]
+            
+            # Make tuple and add to relation entry
+            relation.append((start_offset, end_offset, ent_type))
+      
+      else:
+          num_semicolons = arg_entry.count(';')
+          ## TODO: come up with a way to deal with multiple spans 
+
+
+    return relation 
+
+
 def make_ann_df(ann):
     """
     Converts a brat standoff formatted .ann  file into a dataframe of the form:
@@ -136,46 +224,25 @@ def make_ann_df(ann):
     # Read in file 
     with open(ann) as myf:
         file_lines = myf.readlines()
-
+    
     # Make a dict where the ID (T1, R2, etc) are keys and the rest of the line
     # minus the leading \t are values 
     line_dict = {}
     for line in file_lines:
-        line_dict[line[:2]] = line[3:]
-
+        # Get the index of the tab character
+        ID_end_idx = line.index('\t')
+        line_dict[line[:ID_end_idx]] = line[ID_end_idx:]
+    
     # Format relations for df 
     df_lines = []
     for ID, entry in line_dict.items():
         if ID[0] == 'R':
-            relation = []
-            # Get index of first space, this is the end of the type 
-            type_end_idx = entry.index(' ')
-            # Put type in relation list 
-            relation.append(entry[:type_end_idx])
-            # Look for first argument in dict 
-            arg1_start_idx = type_end_idx + 5
-            arg1_end_idx = entry.index(' ', type_end_idx+1)
-            arg1_id = entry[arg1_start_idx:arg1_end_idx]
-            arg1_entry = df_lines[arg1_id]
-            # Look for second argument in dict
-            arg2_start_idx = arg1_end_idx + 1
-            arg2_id = entry[arg2_start_idx:]
-            arg2_entry = df_lines[arg2_id]
-            # Format args 
-            for arg_entry in (arg1_entry, arg2_entry):
-                # Get entity offsets
-                start_offset_start_idx = arg_entry.index(' ') + 1
-                in_between_space = arg_entry.index(' ', start_offset_start_idx)
-                end_offset_end_idx = arg.entry.index(' ', in_between_space+1)
-                start_offset = int(arg_entry[start_offset_start_idx:in_between_space])
-                end_offset = int(arg_entry[in_between_space+1:end_offset_end_idx])
-                # Get entity type 
-                ent_type = arg_entry[:start_offset_start_idx-1]
-                # Make tuple and add to relation entry
-                relation.append((start_offset, end_offset, ent_type))
-        
-        # Add relation to overall list 
-        df_lines.append(relation)
+            
+            # Format relation 
+            relation = format_relation(entry, line_dict)
+            
+            # Add relation to overall list 
+            df_lines.append(relation)
         
     # Make dataframe 
     ann_df = pd.DataFrame(df_lines, columns=['Type', 'Arg1', 'Arg2'])
@@ -190,7 +257,7 @@ def get_overlapping_docs(annotator1, annotator2, iaa_dir_name):
     """
     from os.path import isfile, join
     
-    # Get full poaths to docs 
+    # Get full paths to docs 
     ann1_path = join(annotator1, iaa_dir_name)
     ann2_path = join(annotator2, iaa_dir_name)
 
@@ -213,21 +280,21 @@ def main(project_root, iaa_dir_name, tolerance):
     # Get IAA for each pair of annotators 
     annotator_pairs_iaas = {}
     for pair in annotator_pairs:
-
+        print(pair)
         # Get overlapping docs for the annotators 
         files_in_common = get_overlapping_docs(pair[0], pair[1], iaa_dir_name)
 
         # Get IAA for files 
-        iaas = []
+        iaas = {}
         for f in files_in_common:
-
+            print(f)
             # Get df for each one 
             ann_df1 = make_ann_df(f'{pair[0]}/{iaa_dir_name}/{f}')
             ann_df2 = make_ann_df(f'{pair[1]}/{iaa_dir_name}/{f}')
 
             # Calculate f1 for this doc pair  
             iaa = calculate_iaa(ann_df1, ann_df2, tolerance=tolerance)
-            iaas.append(iaa)
+            iaas[f] = iaa
         
         # Put the pairs' per-doc scores in the dict
         annotator_pairs_iaas[pair] = iaas
@@ -236,7 +303,7 @@ def main(project_root, iaa_dir_name, tolerance):
     get_iaa_stats(annotator_pairs_iaas)
 
 
-if __name __ == '__main__':
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Calculate relation IAA')
 
@@ -252,6 +319,5 @@ if __name __ == '__main__':
     args = parser.parse_args()
 
     args.project_root = os.path.abspath(args.project_root)
-    args.iaa_dir_name = os.path.abspath(args.iaa_dir_name)
 
     main(args.project_root, args.iaa_dir_name, args.tolerance)
