@@ -33,6 +33,7 @@ Author: Serena G. Lotreck
 import argparse
 import os
 
+import re
 import itertools
 import pandas as pd 
 
@@ -110,14 +111,15 @@ def compare_offsets(offsets_1, offsets_2):
     return overlap 
 
 
-def compare_relations(rel_1, rel_2, tolerance):
+def compare_relations(rel_1, rel_2, symm=False, tolerance='STRICT'):
     """
     Helper function for the two agreement_table functions.
 
     parameters:
         rel_1, df row: first relation to compare
-        rel_2, df row: second relation to compare 
-        tolerance, str: 'STRICT' or 'LOOSE'
+        rel_2, df row: second relation to compare
+        symm, bool: whether or not relation order matters, default False
+        tolerance, str: 'STRICT' or 'LOOSE', default 'STRICT'
     
     returns:
         True if the relations are equivalent under the given 
@@ -130,12 +132,22 @@ def compare_relations(rel_1, rel_2, tolerance):
     arg1_ann2_offsets = rel_2.Arg1[0]
     arg2_ann2_offsets = rel_2.Arg2[0]
     
-    arg1_compare = compare_offsets(arg1_ann1_offsets, arg1_ann2_offsets)
-    arg2_compare = compare_offsets(arg2_ann1_offsets, arg2_ann2_offsets)
 
-    if arg1_compare and arg2_compare:
-        offset_match = True
+    if not symm:
+        arg1_compare = compare_offsets(arg1_ann1_offsets, arg1_ann2_offsets)
+        arg2_compare = compare_offsets(arg2_ann1_offsets, arg2_ann2_offsets)
 
+        if arg1_compare and arg2_compare:
+            offset_match = True
+
+    else: 
+        arg1_compare1 = compare_offsets(arg1_ann1_offsets, arg1_ann2_offsets)
+        arg1_compare2 = compare_offsets(arg1_ann1_offsets, arg2_ann2_offsets)
+        arg2_compare2 = compare_offsets(arg2_ann1_offsets, arg2_ann2_offsets)
+        arg2_compare1 = compare_offsets(arg2_ann1_offsets, arg1_ann2_offsets)
+
+        if (arg1_compare1 or arg1_compare2) and (arg2_compare2 or arg2_compare1):
+            offset_match=True
     # If matching offsets and tolerance is STRICT, compare types 
     if offset_match and tolerance == 'STRICT':
         if rel_1.Type == rel_2.Type:
@@ -177,7 +189,7 @@ def get_loose_agreement_table(ann_df1, ann_df2):
         rel_1 = ann_df1.loc[rel_pair_idx[0], :] 
         rel_2 = ann_df2.loc[rel_pair_idx[1], :]
         
-        comparison = compare_relations(rel_1, rel_2, tolerance='LOOSE')
+        comparison = compare_relations(rel_1, rel_2, symm=True, tolerance='LOOSE')
         if comparison: a += 1
 
     # Get the remaining (different) relations in the two annotator dfs,
@@ -188,7 +200,7 @@ def get_loose_agreement_table(ann_df1, ann_df2):
     return a, b, c
 
 
-def get_strict_agreement_table(ann_df1, ann_df2):
+def get_strict_agreement_table(ann_df1, ann_df2, symm_rels):
     """
     Get the values in the agreement table for two documents according to
     the strict tolerance. 
@@ -196,7 +208,7 @@ def get_strict_agreement_table(ann_df1, ann_df2):
     parameters:
         ann_df1, df: df of .ann file for rater 1
         ann_df2, df: df of .ann file for rater 2
-    
+        symm_rels, list of str: relations for which order doesn't matter
     returns:
         a, b, c: ints, the values from the agreement table 
     """
@@ -204,6 +216,11 @@ def get_strict_agreement_table(ann_df1, ann_df2):
     rel_types = set(ann_df1.Type.values.tolist() + ann_df2.Type.values.tolist())
     a = 0
     for rel_type in rel_types:
+
+        # Determine if order matters for this relation type 
+        if rel_type in symm_rels: 
+            symm = True
+        else: symm = False
         
         # Subset dataframes by type 
         type_df1 = ann_df1.loc[ann_df1['Type'] == rel_type]
@@ -226,7 +243,7 @@ def get_strict_agreement_table(ann_df1, ann_df2):
             rel_1 = type_df1.loc[rel_pair_idx[0], :] 
             rel_2 = type_df2.loc[rel_pair_idx[1], :]
             
-            comparison = compare_relations(rel_1, rel_2, tolerance='STRICT')
+            comparison = compare_relations(rel_1, rel_2, symm=symm, tolerance='STRICT')
             if comparison: a += 1
     
     # Get the remaining (different) relations in the two annotator dfs,
@@ -237,7 +254,7 @@ def get_strict_agreement_table(ann_df1, ann_df2):
     return a, b, c
 
 
-def calculate_iaa(ann_df1, ann_df2, tolerance='STRICT'):
+def calculate_iaa(ann_df1, ann_df2, symm_rels, tolerance='STRICT'):
     """
     Calculate IAA for a pair of documents. The default tolerance for the 
     calculation is STRICT, where entities must have the same span boundaries 
@@ -247,13 +264,14 @@ def calculate_iaa(ann_df1, ann_df2, tolerance='STRICT'):
     parameters:
         ann_df1, df: df of .ann file for rater 1
         ann_df2, df: df of .ann file for rater 2
+        symm_rels, list of str: list of relation types for which order doesn't matter.
         tolerance, str: tolerance with which to calculate IAA. Options are 
             STRICT, SEMI-STRICT, RELATION-LOOSE, ENTITY-LOOSE
     """
     print('\nCalculating IAA for document pair...') 
     # Get agreement values
     if tolerance == 'STRICT':
-        a, b, c = get_strict_agreement_table(ann_df1, ann_df2)
+        a, b, c = get_strict_agreement_table(ann_df1, ann_df2, symm_rels)
     elif tolerance == 'LOOSE':
         a, b, c = get_loose_agreement_table(ann_df1, ann_df2)
 
@@ -415,7 +433,7 @@ def get_overlapping_docs(annotator1, annotator2, iaa_dir_name):
     return files_in_common
 
 
-def main(project_root, iaa_dir_name, tolerance):
+def main(project_root, iaa_dir_name, annotation_conf, tolerance):
         
     # Get annotators 
     print('\nSearching for annotators...')
@@ -426,6 +444,22 @@ def main(project_root, iaa_dir_name, tolerance):
     # Get all combinations of pairs 
     print('\nGetting all combinations of annotators..') 
     annotator_pairs = itertools.combinations(annotator_paths, 2)
+
+    # Read annotation_conf to look for symmetric relations 
+    print('\nSearching for symmetric relations in annotation.conf...')
+    with open(annotation_conf) as myf:
+        file_lines = myf.readlines()
+    
+    symm_rels = []
+    for line in file_lines:
+        if '<REL-TYPE>:symmetric' in line:
+            non_whitespace = len(re.match(r"\s*", line, re.UNICODE).group(0))
+            end_tab = line.index('\t', non_whitespace)
+            relation_type = line[non_whitespace:end_tab]
+            if relation_type[0] == '!':
+                relation_type = relation_type[1:]
+            symm_rels.append(relation_type)
+    print(f'Found {len(symm_rels)} symmetric relations. They are:\n{symm_rels}')
 
     # Get IAA for each pair of annotators 
     print('\nCalculating IAA for all annotator pairs...')
@@ -446,7 +480,7 @@ def main(project_root, iaa_dir_name, tolerance):
             ann_df2 = make_ann_df(f'{pair[1]}/{iaa_dir_name}/{f}')
 
             # Calculate f1 for this doc pair  
-            iaa = calculate_iaa(ann_df1, ann_df2, tolerance=tolerance)
+            iaa = calculate_iaa(ann_df1, ann_df2, symm_rels, tolerance=tolerance)
             iaas[f] = [iaa]
         
         # Put the pairs' per-doc scores in the dict
@@ -468,6 +502,8 @@ if __name__ == '__main__':
     parser.add_argument('iaa_dir_name', type=str,
             help='Name of the directory that all annotator have in common, '
                 'on which IAA should be calculated.')
+    parser.add_argument('annotation_conf', type=str,
+            help='Path to the annotation.conf file for the project.')
     parser.add_argument('tolerance', type=str,
             help='What tolerance to use for the calculation. Options are '
             'STRICT, SEMI-STRICT, RELATION-LOOSE, ENTITY-LOOSE')
@@ -475,5 +511,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     args.project_root = os.path.abspath(args.project_root)
+    args.annotation_conf = os.path.abspath(args.annotation_conf)
 
-    main(args.project_root, args.iaa_dir_name, args.tolerance)
+    main(args.project_root, args.iaa_dir_name, args.annotation_conf, args.tolerance)
