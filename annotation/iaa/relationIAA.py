@@ -104,8 +104,8 @@ def compare_offsets(offsets_1, offsets_2):
     overlap = False
     for offset_1 in offsets_1:
         for offset_2 in offsets_2:
-            if ((offset_1[0] <= offset_2[0] <= offset_1[1]) or 
-                    (offset_2[0] <= offset_1[0] <= offset_2[1])):
+            if ((int(offset_1[0]) <= int(offset_2[0]) <= int(offset_1[1])) or 
+                    (int(offset_2[0]) <= int(offset_1[0]) <= int(offset_2[1]))):
                 overlap = True
 
     return overlap 
@@ -148,6 +148,7 @@ def compare_relations(rel_1, rel_2, symm=False, tolerance='STRICT'):
 
         if (arg1_compare1 or arg1_compare2) and (arg2_compare2 or arg2_compare1):
             offset_match=True
+    
     # If matching offsets and tolerance is STRICT, compare types 
     if offset_match and tolerance == 'STRICT':
         if rel_1.Type == rel_2.Type:
@@ -181,7 +182,7 @@ def get_loose_agreement_table(ann_df1, ann_df2):
     for i in with_id:
         if i[0][-4:] != i[1][-4:]:
             to_compare.append((int(i[0][:-4]), int(i[1][:-4])))
-
+    
     # Assumes that the first element in the tuple is always from df1, this 
     # appears to be the case upon observation 
     for rel_pair_idx in to_compare:
@@ -196,7 +197,7 @@ def get_loose_agreement_table(ann_df1, ann_df2):
     # These are b and c 
     b = ann_df1.shape[0] - a
     c = ann_df2.shape[0] - a
-
+    
     return a, b, c
 
 
