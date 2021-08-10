@@ -86,18 +86,58 @@ def add_spaces(chars, wordlen):
         yield ' '
 
 
+def make_giberish_sentence(len_chars):
+    """
+    Makes a gibberish sentence with the specified number of non-space
+    characters.
 
-def main(num_docs, words_per_sent, sents_per_doc, out_loc):
+    parameters:
+        len_chars, int: number of non-space character to include
+
+    returns:
+        sentence, str: the gibberish sentence
+    """
+    chars = take_n(gibberish(), len_chars)              # Get chars
+    chars = add_spaces(chars, wordlen)                  # Add spaces to make "words"
+    sentence = ''.join(chars).rsplit(' ',1)[0]          # Crop at last space  
+    return sentence.capitalize() + choice(PUNCTUATION)  # Capitalize first letter and add punct
+
+
+def main(num_docs, chars_per_sent, sents_per_doc, out_loc):
 
     # Define frequencies that depend on corpus statistics
+    print('\nDefining character and sentence frequencies...')
     ## Number of words per sentence
-    words_per_sent = pd.read_csv(words_per_sent, header=None)[0].tolist()
-    wps = lambda: choice(words_per_sent)
+    chars_per_sent = pd.read_csv(chars_per_sent, header=None)[0].tolist()
+    cps = lambda: choice(chars_per_sent)
 
     ## Number of sentences per document 
     sents_per_doc = pd.read_csv(sents_per_doc, header=None)[0].tolist()
     spd = lambda: choice(sents_per_doc)
 
+    # Generate docs 
+    print('\nGenerating gibberish docs...')
+
+    for i in range(num_docs):
+
+        print(f'Generating doc {i}')
+
+        doc = ''
+
+        # Choose a number of sentences for the doc
+        for j in range(spd()):
+            
+            # Choose number of chars and make sentence
+            sentence = make_gibberish_sentence(cps())
+
+            doc += sentence
+
+
+        with open(f'{out_loc}/gib_doc_{i}.txt', 'w') as myfile:
+
+            myfile.write(doc)
+
+    print('\nDone!')
 
 
 if __name__ == '__main__':
