@@ -31,7 +31,7 @@ LETTERS = (    # relative character frequencies
 
 CONSONANTS  = ''.join(ch for ch in LETTERS if ch not in "aeiouy")
 VOWELS      = ''.join(ch for ch in LETTERS if ch     in "aeiouy")
-PUNCTUATION = "....??!"
+PUNCTUATION = "....?"
 
 is_cons     = set(CONSONANTS).__contains__    # is_cons(x) == x in set(CONSONANTS)
 
@@ -86,7 +86,7 @@ def add_spaces(chars, wordlen):
         yield ' '
 
 
-def make_giberish_sentence(len_chars):
+def make_gibberish_sentence(len_chars):
     """
     Makes a gibberish sentence with the specified number of non-space
     characters.
@@ -128,7 +128,7 @@ def main(num_docs, chars_per_sent, sents_per_doc, out_loc):
         for j in range(spd()):
             
             # Choose number of chars and make sentence
-            sentence = make_gibberish_sentence(cps())
+            sentence = make_gibberish_sentence(cps()) + ' '
 
             doc += sentence
 
@@ -146,8 +146,8 @@ if __name__ == '__main__':
 
     parser.add_argument('num_docs', type=int,
             help='Number of documents to generate')
-    parser.add_argument('words_per_sent', type=str,
-            help='Path to file with words per sent for corpus to emulate.')
+    parser.add_argument('chars_per_sent', type=str,
+            help='Path to file with chars per sent for corpus to emulate.')
     parser.add_argument('sents_per_doc', type=str,
             help='Path to file with sents per doc for corpus to emulate.')
     parser.add_argument('out_loc', type=str,
@@ -155,8 +155,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    args.words_per_sent = os.path.abspath(args.words_per_sent)
+    args.chars_per_sent = os.path.abspath(args.chars_per_sent)
     args.sents_per_doc = os.path.abspath(args.sents_per_doc)
     args.out_loc = os.path.abspath(args.out_loc)
 
-    main(args.num_docs, args.words_per_sent, args.sents_per_doc, args.out_loc)
+    main(args.num_docs, args.chars_per_sent, args.sents_per_doc, args.out_loc)
