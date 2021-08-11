@@ -81,7 +81,7 @@ then
 
     for model in $models_to_run; do
         
-        echo "Formatting data"
+        echo "Formatting data for model $model"
 
         # Get dataset name
         dataset_name=${dataset_arr[${model}]}
@@ -112,7 +112,7 @@ for model in $models_to_run; do
             model_file=${model}.tar.gz 
             ;;
 
-        scierc-light | genia-light | ace05 | mechanic-fine | mechanic-coarse)
+        scierc-light | genia-light | ace05 | mechanic-granular | mechanic-coarse)
 
             output_dir=${output_top_path}/pretrained_output/lightweight/$model
             
