@@ -6,7 +6,10 @@
 # format_data_run_pretrained.sh <path to dataset> <path to top-level output directory> \
 #       <output identifier> <models to run> <format data?>
 
-# Put a / at the end of your paths plz, I'm not fancy in bash
+# The path to dataset should be a path to a directory if format data is true,
+# and a "" list of file paths if format data is false, to the pre-formatted
+# datasets to be used with the models. Datasets should be listed in the same 
+# order as the models are.
 
 # The models to run argument should be a string with the names of the models 
 # to run, separated by spaces; e.g. "genia genia-light"
@@ -56,7 +59,6 @@
 # Activate conda environment 
 eval "$('/mnt/home/lotrecks/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 conda activate kg
-conda env list
 
 # Declare an array to match the models to their dataset names 
 declare -A dataset_arr
@@ -91,6 +93,16 @@ then
         # Format the data
         python scripts/new-dataset/format_new_dataset.py $data_path ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name;
 
+    done
+
+else 
+    datasets=($datapath)
+    models_array=($models_to_run)\
+    i=0
+    declare -A formatted_data
+    for dataset in $datasets; do 
+        formatted_data[${models_array[i]}]=$dataset
+        i=$((i+1))
     done
 fi
 
@@ -135,9 +147,17 @@ for model in $models_to_run; do
 
     fi 
 
+    # Get the formatted data path 
+    if [[ $format_data = true ]] 
+    then 
+        jsonl=${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl
+    else 
+        jsonl=${formatted_data[$model]}
+    fi
+    conda env list    
     # Run the model 
     allennlp predict \
-        pretrained/$model_file ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl \
+        pretrained/$model_file $jsonl\
         --predictor dygie \
         --include-package dygie \
         --use-dataset-reader \
@@ -147,5 +167,4 @@ for model in $models_to_run; do
         --silent
 
 done
-
 

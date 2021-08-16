@@ -38,7 +38,7 @@ import itertools
 import pandas as pd 
 
 
-def get_iaa_stats(annotator_pairs_iaas):
+def get_iaa_stats(annotator_pairs_iaas, out_loc, prefix):
     """
     Calculate mean and SD for the IAA's for each pair, and also 
     over all annotators.
@@ -46,7 +46,9 @@ def get_iaa_stats(annotator_pairs_iaas):
     parameters:
         annotator_pairs_iaas, dict of dict: key is annotator pair, value
             is a dict where key is document name and value is the iaa score for that document
-    
+        out_loc, str: Path to save output 
+        prefix, str: prefix for saved files
+
     Prints a report with the per-doc and overall iaa 
     """
     # Make nested dict into a multiindex dataframe for more efficient handling
@@ -69,6 +71,10 @@ def get_iaa_stats(annotator_pairs_iaas):
     print('-----------------------------------------')
     print('Overall IAA:')
     print(overall)
+
+    # Save output 
+    per_doc.to_csv(f'{out_loc}/{prefix}_per_doc.csv')
+    overall.to_csv(f'{out_loc}/{prefix}_overall.csv')
 
 
 def calculate_f1(a,b,c):
@@ -434,7 +440,8 @@ def get_overlapping_docs(annotator1, annotator2, iaa_dir_name):
     return files_in_common
 
 
-def main(project_root, iaa_dir_name, annotation_conf, tolerance):
+def main(project_root, iaa_dir_name, annotation_conf, tolerance, out_loc,
+        prefix):
         
     # Get annotators 
     print('\nSearching for annotators...')
@@ -489,7 +496,7 @@ def main(project_root, iaa_dir_name, annotation_conf, tolerance):
 
     # Calculate statistics 
     print('\nCalculating overall statistics...')
-    get_iaa_stats(annotator_pairs_iaas)
+    get_iaa_stats(annotator_pairs_iaas, out_loc, prefix)
 
     print('\nDone!')
 
@@ -508,10 +515,16 @@ if __name__ == '__main__':
     parser.add_argument('tolerance', type=str,
             help='What tolerance to use for the calculation. Options are '
             'STRICT, SEMI-STRICT, RELATION-LOOSE, ENTITY-LOOSE')
-            
+    parser.add_argument('out_loc', type=str,
+            help='Path to save the output')
+    parser.add_argument('prefix', type=str,
+            help='Prefix for saved files')
+
     args = parser.parse_args()
 
     args.project_root = os.path.abspath(args.project_root)
     args.annotation_conf = os.path.abspath(args.annotation_conf)
+    args.out_loc = os.path.abspath(args.out_loc) 
 
-    main(args.project_root, args.iaa_dir_name, args.annotation_conf, args.tolerance)
+    main(args.project_root, args.iaa_dir_name, args.annotation_conf, 
+            args.tolerance, args.out_loc, args.prefix)
