@@ -58,7 +58,7 @@
 
 # Activate conda environment 
 eval "$('/mnt/home/lotrecks/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-conda activate kg
+conda activate dygiepp
 
 # Declare an array to match the models to their dataset names 
 declare -A dataset_arr
@@ -95,8 +95,8 @@ then
 
     done
 
-else 
-    datasets=($datapath)
+else
+    datasets=($data_path)
     models_array=($models_to_run)\
     i=0
     declare -A formatted_data
@@ -105,7 +105,6 @@ else
         i=$((i+1))
     done
 fi
-
 
 # Run the model
 for model in $models_to_run; do
@@ -153,8 +152,10 @@ for model in $models_to_run; do
         jsonl=${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl
     else 
         jsonl=${formatted_data[$model]}
+        echo "jsonl file is"
+        echo $jsonl
     fi
-    conda env list    
+    
     # Run the model 
     allennlp predict \
         pretrained/$model_file $jsonl\
