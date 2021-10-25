@@ -17,7 +17,7 @@ brotlipy==0.7.0
 cached-property==1.5.2
 cachetools @ file:///tmp/build/80754af9/cachetools_1619597386817/work
 catalogue==2.0.6
-certifi==2021.5.30
+certifi==2021.10.8
 cffi @ file:///tmp/build/80754af9/cffi_1625814693446/work
 chardet @ file:///tmp/build/80754af9/chardet_1605303159953/work
 charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
@@ -55,7 +55,7 @@ googleapis-common-protos @ file:///tmp/build/80754af9/googleapis-common-protos-f
 greenlet==1.1.1
 grpcio @ file:///tmp/build/80754af9/grpcio_1614883945333/work
 h5py==3.4.0
-idna==2.10
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1593328102638/work
 imagesize==1.2.0
 importlib-metadata==4.8.1
 importlib-resources==5.2.2
@@ -64,6 +64,7 @@ itsdangerous==2.0.1
 Jinja2==3.0.1
 jmespath @ file:///tmp/build/80754af9/jmespath_1594304593830/work
 joblib==1.0.1
+jsonlines @ file:///home/conda/feedstock_root/build_artifacts/jsonlines_1610922479325/work
 jsonnet==0.17.0
 jsonpickle==2.0.0
 kiwisolver==1.3.2
@@ -82,13 +83,14 @@ numpy==1.21.2
 numpydoc==1.1.0
 optuna==2.9.1
 overrides==3.1.0
+Owlready2 @ file:///home/conda/feedstock_root/build_artifacts/owlready2_1634228954977/work
 packaging==21.0
 pandas==0.25.2
 parsimonious==0.8.1
 pathy==0.6.0
 pbr==5.6.0
-Pillow==8.3.2
-plac==1.1.3
+Pillow==8.3.1
+plac==0.9.6
 pluggy==0.13.1
 preshed==3.0.5
 prettytable==2.2.0
@@ -102,6 +104,7 @@ pybind11==2.6.1
 pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
 pydantic==1.8.2
 Pygments==2.10.0
+pygraphviz==1.3
 pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1608057966937/work
 pyparsing==2.4.7
 pyperclip==1.8.2
@@ -115,7 +118,7 @@ pytorch-transformers==1.1.0
 pytz @ file:///tmp/build/80754af9/pytz_1612215392582/work
 PyYAML==5.4.1
 regex==2021.8.28
-requests==2.25.1
+requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1608156231189/work
 responses==0.14.0
 rsa @ file:///tmp/build/80754af9/rsa_1614366226499/work
 s3transfer @ file:///tmp/build/80754af9/s3transfer_1626435152308/work
