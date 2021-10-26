@@ -1,0 +1,867 @@
+# This file is a list of things to be downloaded using the command:
+#   run.py download
+
+# To add a new item to be download, add a block like this - must have 'url',
+# 'local_name' is optional, use to avoid name collisions
+
+#  #
+#  # Description of source
+#  #
+#  -
+#    # brief comment about file, and optionally a local_name:
+#    url: http://curefordisease.org/some_data.txt
+#    local_name: some_data_more_chars_prevent_name_collision.pdf
+#
+#  For downloading from S3 buckets, see here for information about what URL to use:
+#  https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html#access-bucket-intro
+#  Amazon S3 virtual hosted style URLs follow the format shown below:
+#  https://bucket-name.s3.Region.amazonaws.com/key_name
+#
+---
+
+# # ******Output Data*******
+
+# Lifewide-traits
+#   link: https://opendata.eol.org/dataset/all-trait-data-large
+-
+  url: https://editors.eol.org/other_files/SDR/traits_all.zip
+  local_name: EOLTraitbank.zip
+#
+# Lifewide-hierarchy
+#   link: https://opendata.eol.org/dataset/identifier-map
+#-
+#  url: https://eol.org/data/provider_ids.csv.gz
+#  local_name: EOLhierarchy.tsv.gz
+
+#
+# Plant traits and genes
+#   link: http://palea.cgrb.oregonstate.edu/viewsvn/associations/
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_Arabidosis_Tair.assoc
+  local_name: go_gene_Arabidosis_Tair.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_model_zea_MaizeGDB.assoc
+  local_name: go_gene_model_zea_MaizeGDB.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_Oryza_Gramene.assoc
+  local_name: go_gene_Oryza_Gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_zea_MaizeGDB.assoc
+  local_name: go_gene_zea_MaizeGDB.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Arabidopsis_thaliana.assoc
+  local_name: go_iprscan_Arabidopsis_thaliana.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_sativa.japonica.IRGSP.assoc
+  local_name: go_iprscan_Oryza_sativa.japonica.IRGSP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Populus_trichocarpa.assoc
+  local_name: go_iprscan_Populus_trichocarpa.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Sorghum_bicolor.assoc
+  local_name: go_iprscan_Sorghum_bicolor.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Zea_mays.assoc
+  local_name: go_iprscan_Zea_mays.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_sativa.japonica.IRGSP.assoc
+  local_name: go_ortholog_gene_Oryza_sativa.japonica.IRGSP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Populus_trichocarpa.assoc
+  local_name: go_ortholog_gene_Populus_trichocarpa.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Sorghum_bicolor.assoc
+  local_name: go_ortholog_gene_Sorghum_bicolor.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Zea_mays.assoc
+  local_name: go_ortholog_gene_Zea_mays.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_oryza_gramene.assoc
+  local_name: po_anatomy_gene_oryza_gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_oryza_poc.assoc
+  local_name: po_anatomy_gene_oryza_poc.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_zea_MaizeGDB.assoc
+  local_name: po_anatomy_gene_zea_MaizeGDB.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_model_zea_MaizeGDB.assoc
+  local_name: po_anatomy_gene_model_zea_MaizeGDB.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Arabidopsis_PPPP.assoc
+  local_name: po_gene_Arabidopsis_PPPP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Oryza_PPPP.assoc
+  local_name: po_gene_Oryza_PPPP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Z.mays_PPPP.assoc
+  local_name: po_gene_Z.mays_PPPP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_Arabidopsis_TAIR.assoc
+  local_name: po_growth_gene_Arabidopsis_TAIR.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_model_zea_MaizeGDB.assoc
+  local_name: po_growth_gene_model_zea_MaizeGDB.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_oryza_gramene.assoc
+  local_name: po_growth_gene_oryza_gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_oryza_poc.assoc
+  local_name: po_growth_gene_oryza_poc.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_O.sativa_PPPP.assoc
+  local_name: to_gene_O.sativa_PPPP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_Oryza_Gramene.assoc
+  local_name: to_gene_Oryza_Gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_Z.mays_PPPP.assoc
+  local_name: to_gene_Z.mays_PPPP.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_protein_Oryza_Gramene.assoc
+  local_name: to_protein_Oryza_Gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_qtl_Gramene.assoc
+  local_name: to_qtl_Gramene.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI3K.assoc
+  local_name: to_germplasm_O.sativa_IRRI3K.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_A-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_A-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_B-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_B-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_C-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_C-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_FG-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_FG-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_L-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_L-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_PR-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_PR-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_O.sativa_IRRI_GRIMS_S-traits.assoc
+  local_name: to_germplasm_O.sativa_IRRI_GRIMS_S-traits.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_Sorghum_GRIN.assoc
+  local_name: to_germplasm_Sorghum_GRIN.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_maize_GRIN.assoc
+  local_name: to_germplasm_maize_GRIN.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_germplasm_rice_GRIN.assoc
+  local_name: to_germplasm_rice_GRIN.assoc
+ 
+#saving for later
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_Prunus_yedoensis_var.nudiflora.assoc
+#  local_name: go_gene_Prunus_yedoensis_var.nudiflora.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_gene_Solanaceae_SGN.assoc
+#  local_name: go_gene_Solanaceae_SGN.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_geneproduct_Prunus_persica_GDR.assoc
+#  local_name: go_geneproduct_Prunus_persica_GDR.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Citrus_clementina.assoc
+#  local_name: go_iprsca\1\nn_Citrus_clementina.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Aegilops_tauschii.assoc
+#  local_name: go_iprscan_Aegilops_tauschii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Amborella_trichopoda.assoc
+#  local_name: go_iprscan_Amborella_trichopoda.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Arabidopsis_halleri.assoc
+#  local_name: go_iprscan_Arabidopsis_halleri.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Arabidopsis_lyrata.assoc
+#  local_name: go_iprscan_Arabidopsis_lyrata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Arachis_duranensis.assoc
+#  local_name: go_iprscan_Arachis_duranensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Arachis_ipaensis.assoc
+#  local_name: go_iprscan_Arachis_ipaensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Asparagus_officinalis.assoc
+#  local_name: go_iprscan_Asparagus_officinalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Azolla_filiculoides.assoc
+#  local_name: go_iprscan_Azolla_filiculoides.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brachypodium_distachyon.assoc
+#  local_name: go_iprscan_Brachypodium_distachyon.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brachypodium_sylvaticum.Corvallis.assoc
+#  local_name: go_iprscan_Brachypodium_sylvaticum.Corvallis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brachypodium_sylvaticum.Greece.assoc
+#  local_name: go_iprscan_Brachypodium_sylvaticum.Greece.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brachypodium_sylvaticum.Spain.assoc
+#  local_name: go_iprscan_Brachypodium_sylvaticum.Spain.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brassica_oleracea.assoc
+#  local_name: go_iprscan_Brassica_oleracea.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Brassica_rapa.assoc
+#  local_name: go_iprscan_Brassica_rapa.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Cajanus_cajan.assoc
+#  local_name: go_iprscan_Cajanus_cajan.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Cannabis_sativa.CRBRx.assoc
+#  local_name: go_iprscan_Cannabis_sativa.CRBRx.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Cannabis_sativa.Purple.Kush.assoc
+#  local_name: go_iprscan_Cannabis_sativa.Purple.Kush.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Capsella_rubella.assoc
+#  local_name: go_iprscan_Capsella_rubella.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Capsicum_annuum.assoc
+#  local_name: go_iprscan_Capsicum_annuum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Carica_papaya.assoc
+#  local_name: go_iprscan_Carica_papaya.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Chlamydomonas_reinhardtii.assoc
+#  local_name: go_iprscan_Chlamydomonas_reinhardtii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Chondrus_crispus.assoc
+#  local_name: go_iprscan_Chondrus_crispus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Cicer_arietinum.assoc
+#  local_name: go_iprscan_Cicer_arietinum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Citrullus_lanatus.assoc
+#  local_name: go_iprscan_Citrullus_lanatus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Citrus_sinensis.assoc
+#  local_name: go_iprscan_Citrus_sinensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Coffea_canephora.assoc
+#  local_name: go_iprscan_Coffea_canephora.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Corchorus_capsularis.assoc
+#  local_name: go_iprscan_Corchorus_capsularis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Corchorus_olitorius.assoc
+#  local_name: go_iprscan_Corchorus_olitorius.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Cucumis_sativus.assoc
+#  local_name: go_iprscan_Cucumis_sativus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Durio_zibethinus.assoc
+#  local_name: go_iprscan_Durio_zibethinus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Ectocarpus_siliculosus.assoc
+#  local_name: go_iprscan_Ectocarpus_siliculosus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Erythranthe_guttata.assoc
+#  local_name: go_iprscan_Erythranthe_guttata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Eucalyptus_grandis.assoc
+#  local_name: go_iprscan_Eucalyptus_grandis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Fragaria_vesca.assoc
+#  local_name: go_iprscan_Fragaria_vesca.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Glycine_max.assoc
+#  local_name: go_iprscan_Glycine_max.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Gossypium_raimondii.assoc
+#  local_name: go_iprscan_Gossypium_raimondii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Hordeum_vulgare.assoc
+#  local_name: go_iprscan_Hordeum_vulgare.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Humulus_lupulus.haplotig.assoc
+#  local_name: go_iprscan_Humulus_lupulus.haplotig.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Humulus_lupulus.primary.assoc
+#  local_name: go_iprscan_Humulus_lupulus.primary.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Jatropha_curcas.assoc
+#  local_name: go_iprscan_Jatropha_curcas.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Leersia_perrieri.assoc
+#  local_name: go_iprscan_Leersia_perrieri.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Linum_usitatissimum.assoc
+#  local_name: go_iprscan_Linum_usitatissimum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Malus_domestica.assoc
+#  local_name: go_iprscan_Malus_domestica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Manihot_esculenta.assoc
+#  local_name: go_iprscan_Manihot_esculenta.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Medicago_truncatula.assoc
+#  local_name: go_iprscan_Medicago_truncatula.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Mentha_longifolia.assoc
+#  local_name: go_iprscan_Mentha_longifolia.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Musa_acuminata.assoc
+#  local_name: go_iprscan_Musa_acuminata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Nelumbo_nucifera.assoc
+#  local_name: go_iprscan_Nelumbo_nucifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Nicotiana_attenuata.assoc
+#  local_name: go_iprscan_Nicotiana_attenuata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Nostoc_punctiforme.pcc.73102.assoc
+#  local_name: go_iprscan_Nostoc_punctiforme.pcc.73102.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Ocimum_tenuiflorum.assoc
+#  local_name: go_iprscan_Ocimum_tenuiflorum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_barthii.assoc
+#  local_name: go_iprscan_Oryza_barthii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_brachyantha.assoc
+#  local_name: go_iprscan_Oryza_brachyantha.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_glaberrima.assoc
+#  local_name: go_iprscan_Oryza_glaberrima.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_glumipatula.assoc
+#  local_name: go_iprscan_Oryza_glumipatula.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_granulata.assoc
+#  local_name: go_iprscan_Oryza_granulata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_longistaminata.assoc
+#  local_name: go_iprscan_Oryza_longistaminata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_meridionalis.assoc
+#  local_name: go_iprscan_Oryza_meridionalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_minuta.assoc
+#  local_name: go_iprscan_Oryza_minuta.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_nivara.assoc
+#  local_name: go_iprscan_Oryza_nivara.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_officinalis.assoc
+#  local_name: go_iprscan_Oryza_officinalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_punctata.assoc
+#  local_name: go_iprscan_Oryza_punctata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_rufipogon.assoc
+#  local_name: go_iprscan_Oryza_rufipogon.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_sativa.AUS.kasalath.assoc
+  local_name: go_iprscan_Oryza_sativa.AUS.kasalath.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_sativa.AUS.N22.assoc
+  local_name: go_iprscan_Oryza_sativa.AUS.N22.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Oryza_sativa.indica.assoc
+  local_name: go_iprscan_Oryza_sativa.indica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Phaseolus_vulgaris.assoc
+#  local_name: go_iprscan_Phaseolus_vulgaris.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Phoenix_dactylifera.assoc
+#  local_name: go_iprscan_Phoenix_dactylifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Phyllostachys_heterocycla.assoc
+#  local_name: go_iprscan_Phyllostachys_heterocycla.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Physcomitrella_patens.assoc
+#  local_name: go_iprscan_Physcomitrella_patens.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Picea_abies.assoc
+#  local_name: go_iprscan_Picea_abies.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Pinus_taeda.assoc
+#  local_name: go_iprscan_Pinus_taeda.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Prunus_persica.assoc
+#  local_name: go_iprscan_Prunus_persica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Ricinus_communis.assoc
+#  local_name: go_iprscan_Ricinus_communis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Salvinia_cucullata.assoc
+#  local_name: go_iprscan_Salvinia_cucullata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Selaginella_moellendorffii.assoc
+#  local_name: go_iprscan_Selaginella_moellendorffii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Setaria_italica.assoc
+#  local_name: go_iprscan_Setaria_italica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Solanum_lycopersicum.assoc
+#  local_name: go_iprscan_Solanum_lycopersicum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Solanum_tuberosum.assoc
+#  local_name: go_iprscan_Solanum_tuberosum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Synechocystis_sp.pcc.6803.assoc
+#  local_name: go_iprscan_Synechocystis_sp.pcc.6803.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Theobroma_cacao.assoc
+#  local_name: go_iprscan_Theobroma_cacao.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Trichodesmium_erythraeum.assoc
+#  local_name: go_iprscan_Trichodesmium_erythraeum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_aestivum.assoc
+#  local_name: go_iprscan_Triticum_aestivum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_dicoccoides.assoc
+#  local_name: go_iprscan_Triticum_dicoccoides.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_monococcum.DV92.assoc
+#  local_name: go_iprscan_Triticum_monococcum.DV92.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_monococcum.G3116.assoc
+#  local_name: go_iprscan_Triticum_monococcum.G3116.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_turgidum.assoc
+#  local_name: go_iprscan_Triticum_turgidum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Triticum_urartu.assoc
+#  local_name: go_iprscan_Triticum_urartu.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Utricularia_gibba.assoc
+#  local_name: go_iprscan_Utricularia_gibba.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Vigna_radiata.assoc
+#  local_name: go_iprscan_Vigna_radiata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Vitis_vinifera.assoc
+#  local_name: go_iprscan_Vitis_vinifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Zoysia_japonica.Nagirizaki.assoc
+#  local_name: go_iprscan_Zoysia_japonica.Nagirizaki.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Zoysia_matrella.Wakaba.assoc
+#  local_name: go_iprscan_Zoysia_matrella.Wakaba.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_iprscan_Zoysia_pacifica.Zanpa.assoc
+#  local_name: go_iprscan_Zoysia_pacifica.Zanpa.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Aegilops_tauschii.assoc
+#  local_name: go_ortholog_gene_Aegilops_tauschii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Amborella_trichopoda.assoc
+#  local_name: go_ortholog_gene_Amborella_trichopoda.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Arabidopsis_halleri.assoc
+#  local_name: go_ortholog_gene_Arabidopsis_halleri.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Arabidopsis_lyrata.assoc
+#  local_name: go_ortholog_gene_Arabidopsis_lyrata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Arachis_duranensis.assoc
+#  local_name: go_ortholog_gene_Arachis_duranensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Arachis_ipaensis.assoc
+#  local_name: go_ortholog_gene_Arachis_ipaensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Asparagus_officinalis.assoc
+#  local_name: go_ortholog_gene_Asparagus_officinalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Brachypodium_distachyon.assoc
+#  local_name: go_ortholog_gene_Brachypodium_distachyon.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Brachypodium_sylvaticum.Greece.assoc
+#  local_name: go_ortholog_gene_Brachypodium_sylvaticum.Greece.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Brachypodium_sylvaticum.Spain.assoc
+#  local_name: go_ortholog_gene_Brachypodium_sylvaticum.Spain.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Brassica_oleracea.assoc
+#  local_name: go_ortholog_gene_Brassica_oleracea.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Brassica_rapa.assoc
+#  local_name: go_ortholog_gene_Brassica_rapa.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Cajanus_cajan.assoc
+#  local_name: go_ortholog_gene_Cajanus_cajan.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Cannabis_sativa.CRBRx.assoc
+#  local_name: go_ortholog_gene_Cannabis_sativa.CRBRx.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Cannabis_sativa.Purple.Kush.assoc
+#  local_name: go_ortholog_gene_Cannabis_sativa.Purple.Kush.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Capsella_rubella.assoc
+#  local_name: go_ortholog_gene_Capsella_rubella.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Capsicum_annuum.assoc
+#  local_name: go_ortholog_gene_Capsicum_annuum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Carica_papaya.assoc
+#  local_name: go_ortholog_gene_Carica_papaya.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Chlamydomonas_reinhardtii.assoc
+#  local_name: go_ortholog_gene_Chlamydomonas_reinhardtii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Chondrus_crispus.assoc
+#  local_name: go_ortholog_gene_Chondrus_crispus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Cicer_arietinum.assoc
+#  local_name: go_ortholog_gene_Cicer_arietinum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Citrullus_lanatus.assoc
+#  local_name: go_ortholog_gene_Citrullus_lanatus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Citrus_clementina.assoc
+#  local_name: go_ortholog_gene_Citrus_clementina.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Citrus_sinensis.assoc
+#  local_name: go_ortholog_gene_Citrus_sinensis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Coffea_canephora.assoc
+#  local_name: go_ortholog_gene_Coffea_canephora.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Corchorus_capsularis.assoc
+#  local_name: go_ortholog_gene_Corchorus_capsularis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Corchorus_olitorius.assoc
+#  local_name: go_ortholog_gene_Corchorus_olitorius.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Cucumis_sativus.assoc
+#  local_name: go_ortholog_gene_Cucumis_sativus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Durio_zibethinus.assoc
+#  local_name: go_ortholog_gene_Durio_zibethinus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Ectocarpus_siliculosus.assoc
+#  local_name: go_ortholog_gene_Ectocarpus_siliculosus.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Erythranthe_guttata.assoc
+#  local_name: go_ortholog_gene_Erythranthe_guttata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Eucalyptus_grandis.assoc
+#  local_name: go_ortholog_gene_Eucalyptus_grandis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Fragaria_vesca.assoc
+#  local_name: go_ortholog_gene_Fragaria_vesca.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Glycine_max.assoc
+#  local_name: go_ortholog_gene_Glycine_max.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Gossypium_raimondii.assoc
+#  local_name: go_ortholog_gene_Gossypium_raimondii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Hordeum_vulgare.assoc
+#  local_name: go_ortholog_gene_Hordeum_vulgare.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Humulus_lupulus.haplotig.assoc
+#  local_name: go_ortholog_gene_Humulus_lupulus.haplotig.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Humulus_lupulus.primary.assoc
+#  local_name: go_ortholog_gene_Humulus_lupulus.primary.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Jatropha_curcas.assoc
+#  local_name: go_ortholog_gene_Jatropha_curcas.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Leersia_perrieri.assoc
+#  local_name: go_ortholog_gene_Leersia_perrieri.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Linum_usitatissimum.assoc
+#  local_name: go_ortholog_gene_Linum_usitatissimum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Malus_domestica.assoc
+#  local_name: go_ortholog_gene_Malus_domestica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Manihot_esculenta.assoc
+#  local_name: go_ortholog_gene_Manihot_esculenta.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Medicago_truncatula.assoc
+#  local_name: go_ortholog_gene_Medicago_truncatula.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Mentha_longifolia.assoc
+#  local_name: go_ortholog_gene_Mentha_longifolia.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Musa_acuminata.assoc
+#  local_name: go_ortholog_gene_Musa_acuminata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Nelumbo_nucifera.assoc
+#  local_name: go_ortholog_gene_Nelumbo_nucifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Nicotiana_attenuata.assoc
+#  local_name: go_ortholog_gene_Nicotiana_attenuata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Nostoc_punctiforme.pcc.73102.assoc
+#  local_name: go_ortholog_gene_Nostoc_punctiforme.pcc.73102.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Ocimum_tenuiflorum.assoc
+#  local_name: go_ortholog_gene_Ocimum_tenuiflorum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_barthii.assoc
+#  local_name: go_ortholog_gene_Oryza_barthii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_brachyantha.assoc
+#  local_name: go_ortholog_gene_Oryza_brachyantha.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_glaberrima.assoc
+#  local_name: go_ortholog_gene_Oryza_glaberrima.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_glumipatula.assoc
+#  local_name: go_ortholog_gene_Oryza_glumipatula.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_granulata.assoc
+#  local_name: go_ortholog_gene_Oryza_granulata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_longistaminata.assoc
+#  local_name: go_ortholog_gene_Oryza_longistaminata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_meridionalis.assoc
+#  local_name: go_ortholog_gene_Oryza_meridionalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_minuta.assoc
+#  local_name: go_ortholog_gene_Oryza_minuta.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_nivara.assoc
+#  local_name: go_ortholog_gene_Oryza_nivara.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_officinalis.assoc
+#  local_name: go_ortholog_gene_Oryza_officinalis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_punctata.assoc
+#  local_name: go_ortholog_gene_Oryza_punctata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_rufipogon.assoc
+#  local_name: go_ortholog_gene_Oryza_rufipogon.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_sativa.AUS.kasalath.assoc
+  local_name: go_ortholog_gene_Oryza_sativa.AUS.kasalath.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_sativa.AUS.N22.assoc
+  local_name: go_ortholog_gene_Oryza_sativa.AUS.N22.assoc
+-
+  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Oryza_sativa.indica.assoc
+  local_name: go_ortholog_gene_Oryza_sativa.indica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Phaseolus_vulgaris.assoc
+#  local_name: go_ortholog_gene_Phaseolus_vulgaris.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Phoenix_dactylifera.assoc
+#  local_name: go_ortholog_gene_Phoenix_dactylifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Phyllostachys_heterocycla.assoc
+#  local_name: go_ortholog_gene_Phyllostachys_heterocycla.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Physcomitrella_patens.assoc
+#  local_name: go_ortholog_gene_Physcomitrella_patens.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Picea_abies.assoc
+#  local_name: go_ortholog_gene_Picea_abies.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Pinus_taeda.assoc
+#  local_name: go_ortholog_gene_Pinus_taeda.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Prunus_persica.assoc
+#  local_name: go_ortholog_gene_Prunus_persica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Ricinus_communis.assoc
+#  local_name: go_ortholog_gene_Ricinus_communis.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Salvinia_cucullata.assoc
+#  local_name: go_ortholog_gene_Salvinia_cucullata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Selaginella_moellendorffii.assoc
+#  local_name: go_ortholog_gene_Selaginella_moellendorffii.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Setaria_italica.assoc
+#  local_name: go_ortholog_gene_Setaria_italica.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Solanum_lycopersicum.assoc
+#  local_name: go_ortholog_gene_Solanum_lycopersicum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Solanum_tuberosum.assoc
+#  local_name: go_ortholog_gene_Solanum_tuberosum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Synechocystis_sp.pcc.6803.assoc
+#  local_name: go_ortholog_gene_Synechocystis_sp.pcc.6803.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Theobroma_cacao.assoc
+#  local_name: go_ortholog_gene_Theobroma_cacao.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Trichodesmium_erythraeum.assoc
+#  local_name: go_ortholog_gene_Trichodesmium_erythraeum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_aestivum.assoc
+#  local_name: go_ortholog_gene_Triticum_aestivum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_dicoccoides.assoc
+#  local_name: go_ortholog_gene_Triticum_dicoccoides.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_monococcum.DV92.assoc
+#  local_name: go_ortholog_gene_Triticum_monococcum.DV92.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_monococcum.G3116.assoc
+#  local_name: go_ortholog_gene_Triticum_monococcum.G3116.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_turgidum.assoc
+#  local_name: go_ortholog_gene_Triticum_turgidum.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Triticum_urartu.assoc
+#  local_name: go_ortholog_gene_Triticum_urartu.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Utricularia_gibba.assoc
+#  local_name: go_ortholog_gene_Utricularia_gibba.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Vigna_radiata.assoc
+#  local_name: go_ortholog_gene_Vigna_radiata.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Vitis_vinifera.assoc
+#  local_name: go_ortholog_gene_Vitis_vinifera.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Zoysia_japonica.Nagirizaki.assoc
+#  local_name: go_ortholog_gene_Zoysia_japonica.Nagirizaki.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Zoysia_matrella.Wakaba.assoc
+#  local_name: go_ortholog_gene_Zoysia_matrella.Wakaba.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/go-associations/go_ortholog_gene_Zoysia_pacifica.Zanpa.assoc
+#  local_name: go_ortholog_gene_Zoysia_pacifica.Zanpa.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_Picea_jaiswallab.assoc
+#  local_name: po_anatomy_gene_Picea_jaiswallab.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_gene_physcomitrella_gramene.assoc
+#  local_name: po_anatomy_gene_physcomitrella_gramene.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_mRNA_Gossypium_AgBase.assoc
+#  local_name: po_anatomy_mRNA_Gossypium_AgBase.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_mRNA_physcomitrella_cosmoss_V1.2.assoc
+#  local_name: po_anatomy_mRNA_physcomitrella_cosmoss_V1.2.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_anatomy_protein_Gossypium_AgBase.assoc
+#  local_name: po_anatomy_protein_Gossypium_AgBase.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Anisodus_sgn.assoc
+#  local_name: po_gene_Anisodus_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Atropa_sgn.assoc
+#  local_name: po_gene_Atropa_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Capsicum_sgn.assoc
+#  local_name: po_gene_Capsicum_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Coffea_sgn.assoc
+#  local_name: po_gene_Coffea_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Datura_sgn.assoc
+#  local_name: po_gene_Datura_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_G.max_PPPP.assoc
+#  local_name: po_gene_G.max_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Hyoscyamus_sgn.assoc
+#  local_name: po_gene_Hyoscyamus_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_M.truncatula_PPPP.assoc
+#  local_name: po_gene_M.truncatula_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Nicotiana_sgn.assoc
+#  local_name: po_gene_Nicotiana_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Petunia_sgn.assoc
+#  local_name: po_gene_Petunia_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_Physalis_sgn.assoc
+#  local_name: po_gene_Physalis_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_S.lycopersicum_PPPP.assoc
+#  local_name: po_gene_S.lycopersicum_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_S.lycopersicum_sgn.assoc
+#  local_name: po_gene_S.lycopersicum_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_S.melongena_sgn.assoc
+#  local_name: po_gene_S.melongena_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_S.tuberosum_sgn.assoc
+#  local_name: po_gene_S.tuberosum_sgn.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_gene_model_li_Zea_POC.assoc
+#  local_name: po_gene_model_li_Zea_POC.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_fragaria_jaiswallab.assoc
+#  local_name: po_growth_gene_fragaria_jaiswallab.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_gene_vitis_poc.assoc
+#  local_name: po_growth_gene_vitis_poc.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/po-associations/po_growth_protein_Gossypium_AgBase.assoc
+#  local_name: po_growth_protein_Gossypium_AgBase.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_G.max_PPPP.assoc
+#  local_name: to_gene_G.max_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_M.truncatula_PPPP.assoc
+#  local_name: to_gene_M.truncatula_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/to-associations/to_gene_S.lycopersicum_PPPP.assoc
+#  local_name: to_gene_S.lycopersicum_PPPP.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/peco-associations/peco_gene_Oryza_Gramene.assoc
+#  local_name: peco_gene_Oryza_Gramene.assoc
+#-
+#  url: http://palea.cgrb.oregonstate.edu/viewsvn/associations/peco-associations/peco_protein_Oryza_Gramene.assoc
+#  local_name: peco_protein_Oryza_Gramene.assoc
+
+# #**** CONVERSION TABLES ****
+-
+  url: https://rapdb.dna.affrc.go.jp/download/archive/RAP-MSU_2021-05-10.txt.gz
+  local_name: rice_map.gz
+-
+  url: https://download.maizegdb.org/Pan-genes/MaizeGDB_B73_pangene_2020_11.tsv.gz
+  local_name: corn_map.gz
+#-
+#  url: http://download.geonames.org/export/dump/hierarchy.zip
+#  local_name: hierarchy.zip
+
+# #**** ROBOT ****
+#
+-
+  url: https://github.com/ontodev/robot/releases/download/v1.7.2/robot.jar
+  local_name: robot.jar
+-
+  url: https://raw.githubusercontent.com/ontodev/robot/master/bin/robot
+  local_name: robot
+
+# #**** Ontology files****
+#
+#-
+#  url: http://purl.obolibrary.org/obo/envo.json
+#  local_name: envo.json
+-
+  url: https://raw.githubusercontent.com/diatomsRcool/plant-trait-ontology/master/to.json
+  local_name: to.json
+-
+  url: http://purl.obolibrary.org/obo/po.owl
+  local_name: po.owl
+-
+  url: http://purl.obolibrary.org/obo/go/go-basic.json
+  local_name: go-basic.json
+-
+  url: http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.json
+  local_name: taxslim.json
+#-
+#  url: http://purl.obolibrary.org/obo/pato.json
+#  local_name: pato.json
+#-
+#  url: https://kg-hub.berkeleybop.io/frozen_incoming_data/to_remove.owl
+#  local_name: to_remove.owl
+#-
+#  url: https://kg-hub.berkeleybop.io/frozen_incoming_data/po_remove.owl
+#  local_name: po_remove.owl
