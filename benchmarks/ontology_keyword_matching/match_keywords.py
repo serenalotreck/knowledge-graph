@@ -9,7 +9,7 @@ Author: Serena G. Lotreck
 import argparse
 from os.path import abspath, splitext, join
 from os import listdir
-
+import string
 import spacy
 from spacy.matcher import Matcher
 
@@ -40,11 +40,35 @@ def matches_to_brat(matches, doc):
     return brat_str
 
 
+def strip_keywords(keywords):
+    """
+    Strip keywords of all non-.!? punctuation in order to accurately match
+    the text, which has been stripped by stripPunct.py.
+
+    parameters:
+        keywords, list of str: keywords to strip
+
+    returns:
+        stripped_keywords, list of str: stripped keywords
+    """
+    to_strip = (string.punctuation[1:13]  +
+                string.punctuation[14:20] +
+                string.punctuation[21:])
+
+    stripped_keywords = []
+    for keyword in keywords:
+        stripped_keyword = keyword.translate(str.maketrans('', '', to_strip))
+        stripped_keywords.append(stripped_keyword)
+
+    return stripped_keywords
+
+
 def main(txt_dir, keywords, use_scispacy):
 
-    # Read in the keywords
+    # Read in the keywords & strip punct
     with open(keywords) as f:
         keywords = [keyword.rstrip() for keyword in f.readlines()]
+    keywords = strip_keywords(keywords)
 
     # Initialize a spacy model
     nlp_name = "en_core_sci_sm" if use_scispacy else "en_core_web_sm"

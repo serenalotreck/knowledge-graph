@@ -32,13 +32,11 @@ class TestMatchesToBrat(unittest.TestCase):
         matcher = Matcher(nlp.vocab)
         patterns = []
         for keyword in self.keywords:
-            pattern = [{"LOWER": key_tok.text} for key_tok in keyword]
+            pattern = [{"LOWER": key_tok.text.lower()} for key_tok in keyword]
             patterns.append(pattern)
         matcher.add("Keywords", patterns)
         self.matches = matcher(self.doc)
-        print(matcher.get("Keywords"))
-        print(self.doc)
-        print(self.matches)
+
 
     def test_matches_to_brat(self):
 
@@ -49,7 +47,6 @@ class TestMatchesToBrat(unittest.TestCase):
                         "T3\tENTITY 53 64\tA. thaliana\n"
                         "T4\tENTITY 65 74\tprotein 5\n")
 
-        print(brat_str)
         self.assertEqual(brat_str, right_answer)
 
 
@@ -63,13 +60,14 @@ class TestMain(unittest.TestCase):
         os.makedirs(f'{self.tmpdir}/txt_dir', exist_ok=True)
 
         # Set up input files
-        keywords = 'hello world\nSparty\nprotein 5\nA. thaliana'
+        keywords = ('hello world\nSparty\nprotein 5\nA. '
+                    'thaliana\n(2,3)-dicyclohexene')
         self.keywords_file = f'{self.tmpdir}/keywords.txt'
         with open(self.keywords_file, 'w') as f:
             f.write(keywords)
 
         txt = ('Hello world, my name is Sparty. My research is about '
-                'A. thaliana protein 5.')
+                'A. thaliana protein 5 and 23dicyclohexene.')
         self.txt_dir = f'{self.tmpdir}/txt_dir'
         self.txt_file = f'{self.txt_dir}/doc.txt'
         self.ann_file = f'{self.txt_dir}/doc.ann'
@@ -79,7 +77,8 @@ class TestMain(unittest.TestCase):
         self.right_answer = ("T1\tENTITY 0 11\tHello world\n"
                         "T2\tENTITY 24 30\tSparty\n"
                         "T3\tENTITY 53 64\tA. thaliana\n"
-                        "T4\tENTITY 65 74\tprotein 5\n")
+                        "T4\tENTITY 65 74\tprotein 5\n"
+                        "T5\tENTITY 79 94\t23dicyclohexene\n")
 
 
     def tearDown(self):
