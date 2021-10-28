@@ -10,9 +10,9 @@ import sys
 
 sys.path.append('../benchmarks/ontology_keyword_matching')
 
-import match_keywords as mk
+import phrasematch_keywords as mk
 import spacy
-from spacy.matcher import Matcher
+from spacy.matcher import PhraseMatcher
 
 
 class TestMatchesToBrat(unittest.TestCase):
@@ -22,21 +22,19 @@ class TestMatchesToBrat(unittest.TestCase):
         # Keywords
         nlp = spacy.load("en_core_web_sm")
         keywords = ['hello world', 'Sparty', 'A. thaliana', 'protein 5']
-        self.keywords = [nlp(keyword) for keyword in keywords]
+        patterns = [nlp.make_doc(keyword) for keyword in keywords]
+
         # Text
         txt = ('Hello world, my name is Sparty. My research is about '
                 'A. thaliana protein 5.')
         self.doc = nlp(txt)
 
         # Matcher
-        matcher = Matcher(nlp.vocab)
-        patterns = []
-        for keyword in self.keywords:
-            pattern = [{"LOWER": key_tok.text.lower()} for key_tok in keyword]
-            patterns.append(pattern)
+        matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
         matcher.add("Keywords", patterns)
         self.matches = matcher(self.doc)
-
+        print('self matches')
+        print(self.matches)
 
     def test_matches_to_brat(self):
 

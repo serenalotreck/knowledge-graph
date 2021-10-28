@@ -80,7 +80,7 @@ def main(txt_dir, keyword_path, use_scispacy):
     # Initialize Matcher and define patterns
     print('\nAdding keyword patterns to the Matcher...')
     start_matcher = time.perf_counter()
-    matcher = PhraseMatcher(nlp.vocab)
+    matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
     patterns = [nlp.make_doc(key) for key in keywords]
     matcher.add("Keywords", patterns)
     end_matcher = time.perf_counter()
