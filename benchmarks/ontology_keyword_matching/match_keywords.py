@@ -10,8 +10,11 @@ import argparse
 from os.path import abspath, splitext, join
 from os import listdir
 import string
+import time
+
 import spacy
 from spacy.matcher import Matcher
+import jsonlines
 
 
 def matches_to_brat(matches, doc):
@@ -40,56 +43,43 @@ def matches_to_brat(matches, doc):
     return brat_str
 
 
-def strip_keywords(keywords):
-    """
-    Strip keywords of all non-.!? punctuation in order to accurately match
-    the text, which has been stripped by stripPunct.py.
 
-    parameters:
-        keywords, list of str: keywords to strip
+def main(txt_dir, keyword_path, use_scispacy):
 
-    returns:
-        stripped_keywords, list of str: stripped keywords
-    """
-    to_strip = (string.punctuation[1:13]  +
-                string.punctuation[14:20] +
-                string.punctuation[21:])
-
-    stripped_keywords = []
-    for keyword in keywords:
-        stripped_keyword = keyword.translate(str.maketrans('', '', to_strip))
-        stripped_keywords.append(stripped_keyword)
-
-    return stripped_keywords
-
-
-def main(txt_dir, keywords, use_scispacy):
-
-    # Read in the keywords & strip punct
-    with open(keywords) as f:
-        keywords = [keyword.rstrip() for keyword in f.readlines()]
-    keywords = strip_keywords(keywords)
+    # Read in the keywords & define patterns
+    print('\nReading in keywords...')
+    patterns = []
+    with jsonlines.open(keyword_path) as reader:
+        for obj in reader:
+            pattern = []
+            for position in range(len(obj.keys())):
+                pattern_elt = {"LOWER":{"IN":obj['word_{position}']}}
+                pattern.append(pattern_elt)
+            print(pattern)
+            patterns.append(pattern)
 
     # Initialize a spacy model
+    print('\nInitializing spacy model...')
     nlp_name = "en_core_sci_sm" if use_scispacy else "en_core_web_sm"
     nlp = spacy.load(nlp_name)
 
     # Initialize Matcher and define patterns
+    print('\nAdding keyword patterns to the Matcher...')
+    start_matcher = time.perf_counter()
     matcher = Matcher(nlp.vocab)
-    patterns = []
-    for keyword in keywords:
-        key_toks = nlp(keyword)
-        pattern = [{"LOWER": key_tok.text.lower()} for key_tok in key_toks]
-        patterns.append(pattern)
     matcher.add("Keywords", patterns)
+    end_matcher = time.perf_counter()
+    print(f'Added all {len(patterns)} patterns to matcher in {end_matcher-start_matcher}')
 
     # Get valid files for matching
+    print('\nFinding files to match...')
     txt_files = []
     for f in listdir(txt_dir):
         if f.endswith('.txt'):
             txt_files.append(join(txt_dir, f))
 
     # Get matches and make .ann file for each doc in txt_dir
+    print('\nGetting matches...')
     for f in txt_files:
         # Get text, tokenize, and get matches
         with open(f) as myf:
@@ -105,6 +95,8 @@ def main(txt_dir, keywords, use_scispacy):
         with open(f'{basename}.ann', 'w') as myf:
             myf.write(brat_str)
 
+    print('\nDone!')
+
 
 if __name__ == "__main__":
 
@@ -112,15 +104,14 @@ if __name__ == "__main__":
 
     parser.add_argument('txt_dir', type=str,
             help='Path to directory containing txt files to match')
-    parser.add_argument('keywords', type=str,
-            help='Path to .txt file containing keywords, with one keyword '
-            'per row')
-    parser.add_argument('--use-scispacy', action='store_true',
+    parser.add_argument('keyword_path', type=str,
+            help='Path to .jsonl file containing preprocessed keywords')
+    parser.add_argument('--use_scispacy', action='store_true',
             help='If provided, use scispacy to do tokenization')
 
     args = parser.parse_args()
 
     args.txt_dir = abspath(args.txt_dir)
-    args.keywords = abspath(args.keywords)
+    args.keywords = abspath(args.keyword_path)
 
-    main(args.txt_dir, args.keywords, args.use-scispacy)
+    main(args.txt_dir, args.keyword_path, args.use_scispacy)
