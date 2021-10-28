@@ -13,8 +13,7 @@ import string
 import time
 
 import spacy
-from spacy.matcher import Matcher
-import jsonlines
+from spacy.matcher import PhraseMatcher
 
 
 def matches_to_brat(matches, doc):
@@ -43,20 +42,35 @@ def matches_to_brat(matches, doc):
     return brat_str
 
 
+def strip_keywords(keywords):
+    """
+    Strip keywords of all non-.!? punctuation in order to accurately
+    match the text, which has been stripped by stripPunct.py.
+
+    parameters:
+        keywords, list of str: keywords to strip
+
+    returns:
+        stripped_keywords, list of str: stripped keywords
+    """
+    to_strip = (string.punctuation[1:13] +
+                string.punctuation[14:20] +
+                string.punctuation[21:])
+
+    stripped_keywords = []
+    for keyword in keywords:
+        stripped_keyword = keyword.translate(str.maketrans('','', to_strip))
+        stripped_keywords.append(stripped_keyword)
+
+    return stripped_keywords
+
 
 def main(txt_dir, keyword_path, use_scispacy):
 
-    # Read in the keywords & define patterns
+    # Read in the keywords
     print('\nReading in keywords...')
-    patterns = []
-    with jsonlines.open(keyword_path) as reader:
-        for obj in reader:
-            pattern = []
-            for position in range(len(obj.keys())):
-                pattern_elt = {"LOWER":{"IN":obj['word_{position}']}}
-                pattern.append(pattern_elt)
-            print(pattern)
-            patterns.append(pattern)
+    with open(keyword_path) as f:
+         keywords = strip_keywords([key.rstrip() for key in f.readlines()])
 
     # Initialize a spacy model
     print('\nInitializing spacy model...')
@@ -66,7 +80,8 @@ def main(txt_dir, keyword_path, use_scispacy):
     # Initialize Matcher and define patterns
     print('\nAdding keyword patterns to the Matcher...')
     start_matcher = time.perf_counter()
-    matcher = Matcher(nlp.vocab)
+    matcher = PhraseMatcher(nlp.vocab)
+    patterns = [nlp.make_doc(key) for key in keywords]
     matcher.add("Keywords", patterns)
     end_matcher = time.perf_counter()
     print(f'Added all {len(patterns)} patterns to matcher in {end_matcher-start_matcher}')
@@ -105,7 +120,7 @@ if __name__ == "__main__":
     parser.add_argument('txt_dir', type=str,
             help='Path to directory containing txt files to match')
     parser.add_argument('keyword_path', type=str,
-            help='Path to .jsonl file containing preprocessed keywords')
+            help='Path to .txt file containing one keyword per line')
     parser.add_argument('--use_scispacy', action='store_true',
             help='If provided, use scispacy to do tokenization')
 
