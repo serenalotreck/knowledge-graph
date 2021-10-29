@@ -21,4 +21,4 @@ The script `phrasematch_keywords.py` uses the PhraseMatcher to efficiently match
 ```
 python phrasematch_keywords.py <Path to directory with .txt files> <Set of paths for keyword files, can be more than one file> --use_scispacy
 ```
-If the `--use_scispacy` flag is specified, [scispacy](https://allenai.github.io/scispacy/) wil be used for tokenization.
+If the `--use_scispacy` flag is specified, [scispacy](https://allenai.github.io/scispacy/) will be used for tokenization.
