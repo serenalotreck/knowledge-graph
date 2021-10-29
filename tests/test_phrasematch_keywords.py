@@ -33,8 +33,7 @@ class TestMatchesToBrat(unittest.TestCase):
         matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
         matcher.add("Keywords", patterns)
         self.matches = matcher(self.doc)
-        print('self matches')
-        print(self.matches)
+
 
     def test_matches_to_brat(self):
 
@@ -86,7 +85,7 @@ class TestMain(unittest.TestCase):
 
     def test_main(self):
 
-        mk.main(self.txt_dir, self.keywords_file, False)
+        mk.main(self.txt_dir, [self.keywords_file], False)
 
         # Read back in answer 
         with open(self.ann_file) as f:

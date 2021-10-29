@@ -2,7 +2,7 @@
 #############
 jupyter_notebooks/SciArt Graphs.ipynb
 slurm*
-benchmarks/ontology_keyword_matching/check_gaf_files.py
+benchmarks/ontology_keyword_matching/check_gaf_format.py
 
 ### DIRECTORIES ###
 ###################

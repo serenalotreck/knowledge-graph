@@ -65,12 +65,15 @@ def strip_keywords(keywords):
     return stripped_keywords
 
 
-def main(txt_dir, keyword_path, use_scispacy):
+def main(txt_dir, keyword_paths, use_scispacy):
 
     # Read in the keywords
     print('\nReading in keywords...')
-    with open(keyword_path) as f:
-         keywords = strip_keywords([key.rstrip() for key in f.readlines()])
+    keywords = []
+    for keyword_path in keyword_paths:
+        with open(keyword_path) as f:
+            path_keywords = strip_keywords([key.rstrip() for key in f.readlines()])
+            keywords += path_keywords
 
     # Initialize a spacy model
     print('\nInitializing spacy model...')
@@ -119,14 +122,14 @@ if __name__ == "__main__":
 
     parser.add_argument('txt_dir', type=str,
             help='Path to directory containing txt files to match')
-    parser.add_argument('keyword_path', type=str,
-            help='Path to .txt file containing one keyword per line')
+    parser.add_argument('keyword_paths', nargs='+',
+            help='Paths to .txt file containing one keyword per line')
     parser.add_argument('--use_scispacy', action='store_true',
             help='If provided, use scispacy to do tokenization')
 
     args = parser.parse_args()
 
     args.txt_dir = abspath(args.txt_dir)
-    args.keywords = abspath(args.keyword_path)
+    args.keyword_paths = [abspath(path) for path in args.keyword_paths]
 
-    main(args.txt_dir, args.keyword_path, args.use_scispacy)
+    main(args.txt_dir, args.keyword_paths, args.use_scispacy)

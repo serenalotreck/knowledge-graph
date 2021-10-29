@@ -4,11 +4,12 @@ downloaded from Planteome.
 
 Author: Serena G. Lotreck
 """
-import pdb
 import argparse
 from os.path import abspath, join
 from os import listdir
+
 from goatools.anno.gaf_reader import GafReader
+from tqdm import tqdm
 
 
 def main(planteome_dir, output_dir, file_prefix):
@@ -24,9 +25,7 @@ def main(planteome_dir, output_dir, file_prefix):
     print('\nReading in files...')
     gaf_dicts = []
     problem_files = []
-    for i, f in enumerate(gaf_files):
-        print(f'Reading in file {i} of {len(gaf_files)-1}')
-        #pdb.set_trace()
+    for f in tqdm(gaf_files):
         try:
             gaf = GafReader(f)
         except:
