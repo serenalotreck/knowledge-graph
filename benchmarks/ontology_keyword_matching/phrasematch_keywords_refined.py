@@ -98,12 +98,12 @@ def main(txt_dir, keyword_paths, use_scispacy):
         if ', putative, expressed' in key:
             key = key[:-len(', putative, expressed')-1]
         key_doc = nlp.make_doc(key)
-        if (len(key_doc) == 1) and (not key_doc[0].is_digit): # Skip if just made of digits
+        if (len(key_doc) == 1) and not (key_doc[0].is_digit): # Skip if just made of digits
             if key_doc[0].is_upper: # Case-sensitive match for all-uppercase
                 sensitive_patterns.append(key_doc)
             else: # All other single word tokens
                 lower_patterns.append(key_doc)
-        else: # All multi-word tokens
+        elif (len(key_doc) > 1) and not (key_doc[0].is_digit): # All multi-word tokens
             lower_patterns.append(key_doc)
     ##########################################################################
     matcher1.add("Keywords", lower_patterns)

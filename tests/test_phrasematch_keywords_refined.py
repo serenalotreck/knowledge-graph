@@ -1,5 +1,5 @@
 """
-Spot checks for match_keywords.py
+Spot checks for phrasematch_keywords_refined.py
 
 Author: Serena G. Lotreck
 """
@@ -11,7 +11,7 @@ import json
 
 sys.path.append('../benchmarks/ontology_keyword_matching')
 
-import phrasematch_keywords as mk
+import phrasematch_keywords_refined as mk
 import spacy
 from spacy.matcher import PhraseMatcher
 
@@ -58,14 +58,15 @@ class TestMain(unittest.TestCase):
         os.makedirs(f'{self.tmpdir}/txt_dir', exist_ok=True)
 
         # Set up input files
-        keywords = {'file 1':['hello world', 'Sparty', 'protein 5',
-                    'A. thaliana', '(2,3)-dicyclohexene']}
+        keywords = {'first_keyword_file':['hello world', 'Sparty', 'protein 5',
+                'A. thaliana', '(2,3)-dicyclohexene', '12345', 'GREEN']}
         self.keywords_file = f'{self.tmpdir}/keywords.json'
         with open(self.keywords_file, 'w') as f:
             json.dump(keywords, f)
 
         txt = ('Hello world, my name is Sparty. My research is about '
-                'A. thaliana protein 5 and 23dicyclohexene. Hello.')
+                'A. thaliana protein 5 and 23dicyclohexene. '
+                'Hello, 12345, Green, GREEN.')
         self.txt_dir = f'{self.tmpdir}/txt_dir'
         self.txt_file = f'{self.txt_dir}/doc.txt'
         self.ann_file = f'{self.txt_dir}/doc.ann'
@@ -76,7 +77,8 @@ class TestMain(unittest.TestCase):
                         "T2\tENTITY 24 30\tSparty\n"
                         "T3\tENTITY 53 64\tA. thaliana\n"
                         "T4\tENTITY 65 74\tprotein 5\n"
-                        "T5\tENTITY 79 94\t23dicyclohexene\n")
+                        "T5\tENTITY 79 94\t23dicyclohexene\n"
+                        "T6\tENTITY 117 122\tGREEN\n")
 
 
     def tearDown(self):
