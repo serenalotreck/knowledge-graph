@@ -1,6 +1,9 @@
 """
 Extract entities based on keywords from the Planteome database
 
+Refined to account for erroneously matching simple words and for
+certain comma-separated fields.
+
 Adds a .ann file to the txt_dir for each .txt file with the same
 name, containing the annotations based on keywords for that file.
 
@@ -86,12 +89,28 @@ def main(txt_dir, keyword_paths, use_scispacy):
     # Initialize Matcher and define patterns
     print('\nAdding keyword patterns to the Matcher...')
     start_matcher = time.perf_counter()
-    matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
-    patterns = [nlp.make_doc(key) for key in keywords]
-    matcher.add("Keywords", patterns)
+    matcher1 = PhraseMatcher(nlp.vocab, attr="LOWER")
+    ################# Additions to deal with edge cases ######################
+    matcher2 = PhraseMatcher(nlp.vocab) # Case-sensitive matcher
+    lower_patterns = []
+    sensitive_patterns = []
+    for key in keywords:
+        if ', putative, expressed' in key:
+            key = key[:-len(', putative, expressed')-1]
+        key_doc = nlp.make_doc(key)
+        if (len(key_doc) == 1) and (not key_doc[0].is_digit): # Skip if just made of digits
+            if key_doc[0].is_upper: # Case-sensitive match for all-uppercase
+                sensitive_patterns.append(key_doc)
+            else: # All other single word tokens
+                lower_patterns.append(key_doc)
+        else: # All multi-word tokens
+            lower_patterns.append(key_doc)
+    ##########################################################################
+    matcher1.add("Keywords", lower_patterns)
+    matcher2.add("Keywords", sensitive_patterns)
     end_matcher = time.perf_counter()
-    print(f'Added all {len(patterns)} patterns to matcher in '
-          f'{end_matcher-start_matcher:.2f} seconds')
+    print(f'Added all {len(lower_patterns) + len(sensitive_patterns)} '
+            f'patterns to matchers in {end_matcher-start_matcher:.2f} seconds')
 
     # Get valid files for matching
     print('\nFinding files to match...')
@@ -107,7 +126,7 @@ def main(txt_dir, keyword_paths, use_scispacy):
         with open(f) as myf:
             text = myf.read()
         doc = nlp(text)
-        matches = matcher(doc)
+        matches = matcher1(doc) + matcher2(doc)
 
         # Convert matches to brat format 
         brat_str = matches_to_brat(matches, doc)

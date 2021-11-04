@@ -7,6 +7,8 @@ Author: Serena G. Lotreck
 import argparse
 from os.path import abspath, join
 from os import listdir
+import json
+from collections import defaultdict
 
 from goatools.anno.gaf_reader import GafReader
 from tqdm import tqdm
@@ -23,7 +25,7 @@ def main(planteome_dir, output_dir, file_prefix):
 
     # Read in GAF files
     print('\nReading in files...')
-    gaf_dicts = []
+    gaf_dicts = {}
     problem_files = []
     for f in tqdm(gaf_files):
         try:
@@ -32,25 +34,27 @@ def main(planteome_dir, output_dir, file_prefix):
             print(f'Exception raised in GAF parsing, skipping file')
             problem_files.append(f)
         else:
-            gaf_dicts.append(gaf)
+            gaf_dicts[f] = gaf
 
     # Get keywords
     print('\nGetting keywords...')
-    names = set()
-    for i, gaf in enumerate(gaf_dicts):
-        print(f'Getting keywords from file {i} of {len(gaf_dicts)-1}')
+    names = defaultdict(set)
+    for f, gaf in tqdm(gaf_dicts.items()):
         for namedTup in gaf.associations:
             name = namedTup.DB_Name
             syns = namedTup.DB_Synonym
-            names.update(name)
-            names.update(syns)
+            names[f].update(name)
+            names[f].update(syns)
+    for key, value in names.items():
+        names[key] = list(value)
 
-    # Write out as a single column .txt file
+    # Write out files
     print('\nWriting output files...')
-    with open(f'{output_dir}/{file_prefix}_keywords.txt', 'w') as f:
-        f.write('\n'.join(names))
+    with open(f'{output_dir}/{file_prefix}_keywords.json', 'w') as f:
+        json.dump(names, f)
     with open(f'{output_dir}/{file_prefix}_problem_files.txt', 'w') as f:
         f.write('\n'.join(problem_files))
+
 
     print('\nDone!')
 

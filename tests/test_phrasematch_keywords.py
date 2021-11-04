@@ -26,7 +26,7 @@ class TestMatchesToBrat(unittest.TestCase):
 
         # Text
         txt = ('Hello world, my name is Sparty. My research is about '
-                'A. thaliana protein 5.')
+                'A. thaliana protein 5. Hello.')
         self.doc = nlp(txt)
 
         # Matcher
@@ -64,7 +64,7 @@ class TestMain(unittest.TestCase):
             f.write(keywords)
 
         txt = ('Hello world, my name is Sparty. My research is about '
-                'A. thaliana protein 5 and 23dicyclohexene.')
+                'A. thaliana protein 5 and 23dicyclohexene. Hello.')
         self.txt_dir = f'{self.tmpdir}/txt_dir'
         self.txt_file = f'{self.txt_dir}/doc.txt'
         self.ann_file = f'{self.txt_dir}/doc.ann'
