@@ -9,7 +9,7 @@ import shutil
 import sys
 import json
 
-sys.path.append('../benchmarks/ontology_keyword_matching')
+sys.path.append('../models/benchmarks/ontology_keyword_matching')
 
 import phrasematch_keywords_refined as mk
 import spacy
