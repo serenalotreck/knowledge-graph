@@ -61,22 +61,50 @@ class TestGetF1Input(unittest.TestCase):
                         }]
 
 
-    def test_get_f1_input_perfect(self):
+    def test_get_f1_input_perfect_predicted(self):
 
         predicted, gold, matched = emo.get_f1_input(self.gold_std,
                 self.predictions_perfect)
 
         self.assertEqual(predicted, 4)
+
+
+    def test_get_f1_input_perfect_gold(self):
+
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                self.predictions_perfect)
+
         self.assertEqual(gold, 4)
+
+
+    def test_get_f1_input_perfect_matched(self):
+
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                self.predictions_perfect)
+
         self.assertEqual(matched, 4)
 
-    def test_get_f1_input_imperfect(self):
+
+    def test_get_f1_input_imperfect_predicted(self):
 
         predicted, gold, matched = emo.get_f1_input(self.gold_std,
                 self.predictions_imperfect)
 
         self.assertEqual(predicted, 5)
+
+    def test_get_f1_input_imperfect_gold(self):
+
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                self.predictions_imperfect)
+
         self.assertEqual(gold, 4)
+
+
+    def test_get_f1_input_impoerfect_matched(self):
+
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                self.predictions_imperfect)
+
         self.assertEqual(matched, 2)
 
 

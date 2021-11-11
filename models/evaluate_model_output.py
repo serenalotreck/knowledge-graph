@@ -39,6 +39,7 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
 
     # Go through the docs
     for doc in prediction_dicts:
+        # Get the corresnponding gold standard
         try:
             gold_std = gold_standard_dict[doc['doc_key']]
         except KeyError:
@@ -63,11 +64,11 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
                 else:
                     fn += 1
 
-        predicted = tp + fp
-        gold = tp + fn
-        matched = tp
+    predicted = tp + fp
+    gold = tp + fn
+    matched = tp
 
-        return predicted, gold, matched
+    return predicted, gold, matched
 
 
 def main(gold_standard, predictions):
