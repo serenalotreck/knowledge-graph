@@ -87,11 +87,12 @@ then
 
         # Get dataset name
         dataset_name=${dataset_arr[${model}]}
-        # Make blank file to write the prepped data
+        echo $data_path 
+	# Make blank file to write the prepped data
         touch ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl;
 
         # Format the data
-        python scripts/new-dataset/format_new_dataset.py $data_path ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name;
+        echo "python scripts/new-dataset/format_new_dataset.py $data_path ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name --use-scispacy;"
 
     done
 

@@ -77,7 +77,7 @@ def main(gold_standard, predictions):
     gold_standard_dicts = []
     with jsonlines.open(gold_standard) as reader:
         for obj in reader:
-            gold_standard.append(obj)
+            gold_standard_dicts.append(obj)
     prediction_dicts = []
     with jsonlines.open(predictions) as reader:
         for obj in reader:

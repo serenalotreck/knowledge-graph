@@ -12,12 +12,15 @@ annotations with all of them in sight.
 Makes a new directory within out_loc of f'{iaa_dir_name}_unified' for the
 new unity annotation.
 
+IMPORTANT: Assumes there are only entities (ID starting with T) in the files.
+
 Author: Serena G. Lotreck
 """
 import argparse
 from os import scandir, listdir, mkdir
 from os.path import abspath, splitext
 import shutil
+import pdb
 
 
 def main(project_root, iaa_dir_name, out_loc):
@@ -41,19 +44,27 @@ def main(project_root, iaa_dir_name, out_loc):
         shutil.copy(fullpath, out_path)
 
     # Make a .ann file for each .txt doc with all of the annotations
+    #pdb.set_trace()
     for f in overlap:
         ann_str = ''
+        ent_num = 0
         for i, annotator_path in enumerate(annotator_paths):
             f_root = splitext(f)[0]
             with open(f'{annotator_path}/{iaa_dir_name}/{f_root}.ann') as myf:
-                current_ann = myf.read()
-            # Make sure the previous one ended with a newline
-            if i > 0:
-                try:
-                    assert ann_str[-1] == '\n'
-                except AssertionError:
-                    ann_str += '\n'
-            ann_str += current_ann
+                current_ann_lines = myf.readlines()
+            for line in current_ann_lines:
+                # Replace the entity number in the ID
+                ent_num += 1
+                line_elts = line.split('\t')
+                line_elts[0] = f'T{ent_num}'
+                line = '\t'.join(line_elts)
+                # Make sure the previous one ended with a newline
+                if i > 0:
+                    try:
+                        assert ann_str[-1] == '\n'
+                    except AssertionError:
+                        ann_str += '\n'
+                ann_str += line
         with open(f'{out_path}/{f_root}.ann', 'w') as myf:
             myf.write(ann_str)
 
