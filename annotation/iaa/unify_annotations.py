@@ -4,10 +4,13 @@ entity type by convert_types.py, put all annotations in one .ann file for each
 .txt document.
 
 Copies the .txt files to a new directory, and makes a .ann file for each, with
-all of the annotators' annotations in them. The types will be left as ENTITY;
+all of the annotators' annotations in them. The types will be left as they are;
 the purpose of this script is simply to put all of the annotations in one
 place such that the person unifying them can just delete or modify existing
 annotations with all of them in sight.
+
+Annotations that are exactly the same (same start, end, type and text) will be
+reduced to one annotation.
 
 Makes a new directory within out_loc of f'{iaa_dir_name}_unified' for the
 new unity annotation.
@@ -58,13 +61,18 @@ def main(project_root, iaa_dir_name, out_loc):
                 line_elts = line.split('\t')
                 line_elts[0] = f'T{ent_num}'
                 line = '\t'.join(line_elts)
+                # Check if this entity already exists in the same form
+                form = '\t'.join(line_elts[1:]) # Ignore the ID
+                if form in ann_str:
+                    continue
+                else:
                 # Make sure the previous one ended with a newline
-                if i > 0:
-                    try:
-                        assert ann_str[-1] == '\n'
-                    except AssertionError:
-                        ann_str += '\n'
-                ann_str += line
+                    if i > 0:
+                        try:
+                            assert ann_str[-1] == '\n'
+                        except AssertionError:
+                            ann_str += '\n'
+                    ann_str += line
         with open(f'{out_path}/{f_root}.ann', 'w') as myf:
             myf.write(ann_str)
 

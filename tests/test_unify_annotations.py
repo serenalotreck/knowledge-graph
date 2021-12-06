@@ -96,9 +96,6 @@ T13\tENTITY 67 72\taspen
 T14\tENTITY 74 116\tPopulus tremula L. x P. tremuloides Michx.
 T15\tENTITY 128 141\tchronic ozone
 T16\tENTITY 143 148\tO(3);
-T17\tENTITY 236 259\tO(3)-sensitive clone 51
-T18\tENTITY 271 273\tET
-T19\tENTITY 350 364\tsalicylic acid
 T20\tENTITY 411 419\tclone 51
 """
 
