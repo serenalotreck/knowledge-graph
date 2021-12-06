@@ -36,6 +36,8 @@ def unify_ents(overlap, annotator_paths, iaa_dir_name, out_path):
     Function to unify entity annotations. Ignores any annotation whose
     ID doesn't begin with a T.
 
+    NOTE: Any non-entity annotations will not appear in the final .ann files.
+
     parameters:
         overlap, set of str: a set of the files to unify
         annotator_paths, list of str: paths for each annotator
