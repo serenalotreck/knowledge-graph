@@ -53,6 +53,7 @@ T2\tENTITY 22 24\tET
 T3\tENTITY 67 72\taspen
 T4\tENTITY 74 116\tPopulus tremula L. x P. tremuloides Michx.
 T5\tENTITY 128 141\tchronic ozone
+R1\tPART-OF Arg1:T2 Arg2:T3
 T6\tENTITY 143 148\tO(3);
 T7\tENTITY 236 259\tO(3)-sensitive clone 51
 T8\tENTITY 271 273\tET
@@ -105,14 +106,19 @@ T20\tENTITY 411 419\tclone 51
         shutil.rmtree(self.tmpdir)
 
 
-    def test_unify_annotations(self):
+    def test_unify_annotations_ents(self):
 
-        ua.main(self.tmpdir, self.iaa_dir_name, self.tmpdir)
+        ua.main(self.tmpdir, self.iaa_dir_name, "ent", self.tmpdir)
 
         with open(f'{self.tmpdir}/last_ten_unified/txt1.ann') as myf:
             ann_file = myf.read()
 
         self.assertEqual(ann_file, self.right_answer)
+
+
+    def test_unify_annotations_rels(self):
+
+        pass
 
 
 if __name__ == "__main__":
