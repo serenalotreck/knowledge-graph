@@ -4,7 +4,7 @@
 # Run with the command:
 
 # format_data_run_pretrained.sh <path to dataset> <path to top-level output directory> \
-#       <output identifier> <models to run> <format data?>
+#       <output identifier> <models to run> <path to dygiepp repo top dir> <format data?>
 
 # The path to dataset should be a path to a directory if format data is true,
 # and a "" list of file paths if format data is false, to the pre-formatted
@@ -12,7 +12,8 @@
 # order as the models are.
 
 # The models to run argument should be a string with the names of the models 
-# to run, separated by spaces; e.g. "genia genia-light"
+# to run, separated by spaces; e.g. 'genia genia-light'
+# CAUTION: Be sure to use single quotes, otherwise the input will be incorrect
 # Options are:
 # scierc scierc-light genia genia-light ace05 mechanic-granular mechanic-coarse
 
@@ -71,11 +72,12 @@ dataset_arr[mechanic-coarse]=None
 dataset_arr[mechanic-granular]=covid-event 
 
 # Define variables for the command line args 
-data_path=`realpath $1`
+data_path=$1
 output_top_path=`realpath $2`
 output_id=$3
 models_to_run=$4
-format_data=$5 
+path_to_dygiepp=`realpath $5`
+format_data=$6
 
 # Make the blank file for the dataset(s) and write into it
 if [[ $format_data = true ]] 
@@ -87,23 +89,22 @@ then
 
         # Get dataset name
         dataset_name=${dataset_arr[${model}]}
-        echo $data_path 
 	# Make blank file to write the prepped data
         touch ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl;
 
         # Format the data
-        echo "python scripts/new-dataset/format_new_dataset.py $data_path ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name --use-scispacy;"
+        python ${path_to_dygiepp}/scripts/new-dataset/format_new_dataset.py `realpath $data_path` ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name --use-scispacy;
 
     done
 
 else
-    datasets=($data_path)
-    models_array=($models_to_run)\
+    datasets=$data_path
+    models_array=($models_to_run)
     i=0
     declare -A formatted_data
     for dataset in $datasets; do 
-        formatted_data[${models_array[i]}]=$dataset
-        i=$((i+1))
+        formatted_data[${models_array[i]}]=`realpath $dataset`
+	i=$((i+1))
     done
 fi
 
@@ -121,7 +122,7 @@ for model in $models_to_run; do
         scierc | genia)
 
             output_dir=${output_top_path}/pretrained_output/withCoref/$model
-            model_file=${model}.tar.gz 
+            model_file=${path_to_dygiepp}/pretrained/${model}.tar.gz 
             ;;
 
         scierc-light | genia-light | ace05 | mechanic-granular | mechanic-coarse)
@@ -130,12 +131,12 @@ for model in $models_to_run; do
             
             if [[ "$model" == *"light"* ]] 
             then
-                model_file=${model}weight.tar.gz
+                model_file=${path_to_dygiepp}/pretrained/${model}weight.tar.gz
             elif [[ "$model" == "ace05" ]]
             then 
-                model_file=${model}-relation.tar.gz
+                model_file=${path_to_dygiepp}/pretrained/${model}-relation.tar.gz
             else 
-                model_file=${model}.tar.gz
+                model_file=${path_to_dygiepp}/pretrained/${model}.tar.gz
             fi
             ;;
     esac
@@ -153,13 +154,11 @@ for model in $models_to_run; do
         jsonl=${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl
     else 
         jsonl=${formatted_data[$model]}
-        echo "jsonl file is"
-        echo $jsonl
     fi
     
     # Run the model 
     allennlp predict \
-        pretrained/$model_file $jsonl\
+        $model_file $jsonl\
         --predictor dygie \
         --include-package dygie \
         --use-dataset-reader \
