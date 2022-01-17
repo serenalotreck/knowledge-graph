@@ -7,11 +7,11 @@ Prints to stdout, use > to pipe output to a file
 Author: Serena G. Lotreck
 """
 import argparse
-from os.path import abspath
+from os.path import abspath, basename
 
 from dygie.training.f1 import compute_f1 # Must have dygiepp developed in env
 import jsonlines
-
+import pandas as pd
 
 def get_f1_input(gold_standard_dicts, prediction_dicts):
     """
@@ -71,30 +71,57 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
     return predicted, gold, matched
 
 
-def main(gold_standard, predictions):
+def get_performance_row(pred_file, gold_std_file):
+    """
+    Gets performance metrics and returns as a list.
 
+    parameters:
+        pred_file, str: name of the file used for predictions
+        gold_std_file, str: name of the gold standard file
+
+    returns:
+        row, list: [pred file name, gold std file name, precision, recall, f1]
+    """
     # Read in the files
-    gold_standard_dicts = []
-    with jsonlines.open(gold_standard) as reader:
+    gold_std_dicts = []
+    with jsonlines.open(gold_std_file) as reader:
         for obj in reader:
-            gold_standard_dicts.append(obj)
-    prediction_dicts = []
-    with jsonlines.open(predictions) as reader:
+            gold_std_dicts.append(obj)
+    pred_dicts = []
+    with jsonlines.open(pred_file) as reader:
         for obj in reader:
-            prediction_dicts.append(obj)
+            pred_dicts.append(obj)
+
+    pred_names = [pred["doc_key"] for pred in pred_dicts]
+    gold_std_names = [gold["doc_key"] for gold in gold_std_dicts]
 
     # Calculate performance
-    predicted, gold, matched = get_f1_input(gold_standard_dicts,
-                                            prediction_dicts)
+    predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
     precision, recall, f1 = compute_f1(predicted, gold, matched)
 
-    # Print to to stdout
-    print('==================> Performance report <==================')
-    print(f'\nPrediction file: {predictions}')
-    print(f'Gold standard file: {gold_standard}\n')
-    print(f'Precision: {precision}')
-    print(f'Recall: {recall}')
-    print(f'F1: {f1}')
+    return [basename(pred_file), basename(gold_std_file), precision, recall,
+            f1]
+
+
+def main(gold_standard, out_name, predictions):
+
+    # Calculate performance
+    print('\nCalculating performance...')
+    df_rows = []
+    for model in predictions:
+        df_rows.append( get_performance_row(model, gold_standard))
+
+    # Make df
+    print('\nMaking dataframe...')
+    df = pd.DataFrame(df_rows, columns=['pred_file', 'gold_std_file',
+                                        'precision','recall','F1'])
+    print(f'Snapshot of dataframe:\n{df.head()}')
+
+    # Save
+    print(f'\nSaving file as {out_name}')
+    df.to_csv(out_name, index=False)
+
+    print('\nDone!\n')
 
 
 if __name__ == "__main__":
@@ -103,12 +130,15 @@ if __name__ == "__main__":
 
     parser.add_argument('gold_standard', type=str,
             help='Path to dygiepp-formatted gold standard data')
-    parser.add_argument('predictions', type=str,
-            help='Path to dygiepp-formatted model output')
+    parser.add_argument('out_name', type=str,
+            help='Name of save file for output (including path)')
+    parser.add_argument('predictions', nargs='+',
+            help='Paths to dygiepp-formatted model outputs')
 
     args = parser.parse_args()
 
     args.gold_standard = abspath(args.gold_standard)
-    args.predictions = abspath(args.predictions)
+    args.out_name = abspath(args.out_name)
+    args.predictions = [abspath(pred) for pred in args.predictions]
 
-    main(args.gold_standard, args.predictions)
+    main(args.gold_standard, args.out_name, args.predictions)
