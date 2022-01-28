@@ -7,9 +7,13 @@
 #       <output identifier> <models to run> <path to dygiepp repo top dir> <format data?>
 
 # The path to dataset should be a path to a directory if format data is true,
-# and a "" list of file paths if format data is false, to the pre-formatted
-# datasets to be used with the models. Datasets should be listed in the same 
-# order as the models are.
+# and a file path to a template dataset if format data is false. The template
+# dataset has XXXX in place of a model name, so that the same file can be
+# used repeatedly for all the different models. The filled-in copies of the
+# template will be saved in the same directory as the template directory.
+
+# NOTE: the template filename must have the string TEMPLATE in it. This will be
+# replaced by the dataset name when the new files are saved.
 
 # The models to run argument should be a string with the names of the models 
 # to run, separated by spaces; e.g. 'genia genia-light'
@@ -93,18 +97,28 @@ then
         touch ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl;
 
         # Format the data
-        python ${path_to_dygiepp}/scripts/new-dataset/format_new_dataset.py `realpath $data_path` ${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl $dataset_name --use-scispacy;
+        python ${path_to_dygiepp}/scripts/new-dataset/format_new_dataset.py \
+		`realpath $data_path` \
+		${output_top_path}/prepped_data/${output_id}_dygiepp_formatted_data_${dataset_name}.jsonl \
+		$dataset_name --use-scispacy;
 
     done
 
 else
-    datasets=$data_path
+    dataset=$data_path
+    dataset_dir="$(dirname "${dataset}")"
     models_array=($models_to_run)
-    i=0
     declare -A formatted_data
-    for dataset in $datasets; do 
-        formatted_data[${models_array[i]}]=`realpath $dataset`
-	i=$((i+1))
+    for dataset_name in "${!dataset_arr[@]}"; do
+	# Check if this dataset is being run
+        if [[ " ${models_array[@]} " =~ " ${dataset_name} " ]]; then
+		# Replace dataset name in template	
+		echo $dataset
+		echo "${dataset/TEMPLATE/$dataset_name}"
+		sed "s/XXXX/${dataset_arr[$dataset_name]}/g" $dataset > "${dataset/TEMPLATE/$dataset_name}"
+		formatted_data[${dataset_name}]="${dataset/TEMPLATE/$dataset_name}"
+	fi	
+	
     done
 fi
 
