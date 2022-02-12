@@ -13,7 +13,7 @@ jupyter_notebooks/.ipynb_checkpoints
 __pycache__/
 
 
-## Harry \_(**}_/ ##
+## Harry \_('')_/ ##
 planteome_dir/
 planteome_keywords/
 my_abstracts/
@@ -22,3 +22,5 @@ pubmed-jasmonicac-set.txt
 5000_chosen_abstracts.csv
 doc2vec_model
 doc2vec_vectors.csv
+*.wordvectors
+*.json

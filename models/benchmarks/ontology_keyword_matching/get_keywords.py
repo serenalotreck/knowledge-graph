@@ -51,7 +51,7 @@ def main(planteome_dir, output_dir, file_prefix):
     # Write out files
     print('\nWriting output files...')
     with open(f'{output_dir}/{file_prefix}_keywords.json', 'w') as f:
-        json.dump(names, f)
+        json.dump(names, f, indent=4)
     with open(f'{output_dir}/{file_prefix}_problem_files.txt', 'w') as f:
         f.write('\n'.join(problem_files))
 
