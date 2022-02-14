@@ -7,7 +7,8 @@ Prints to stdout, use > to pipe output to a file
 Author: Serena G. Lotreck
 """
 import argparse
-from os.path import abspath, basename
+from os.path import abspath, basename, join
+from os import listdir
 
 from dygie.training.f1 import compute_f1 # Must have dygiepp developed in env
 import jsonlines
@@ -132,13 +133,16 @@ if __name__ == "__main__":
             help='Path to dygiepp-formatted gold standard data')
     parser.add_argument('out_name', type=str,
             help='Name of save file for output (including path)')
-    parser.add_argument('predictions', nargs='+',
-            help='Paths to dygiepp-formatted model outputs')
+    parser.add_argument('prediction_dir', type=str,
+            help='Path to directory with dygiepp-formatted model outputs')
 
     args = parser.parse_args()
 
     args.gold_standard = abspath(args.gold_standard)
     args.out_name = abspath(args.out_name)
-    args.predictions = [abspath(pred) for pred in args.predictions]
+    args.prediction_dir = abspath(args.prediction_dir)
 
-    main(args.gold_standard, args.out_name, args.predictions)
+    pred_files = [join(args.prediction_dir, f) for f in
+            listdir(args.prediction_dir) if f.endswith(".jsonl")]
+
+    main(args.gold_standard, args.out_name, pred_files)
