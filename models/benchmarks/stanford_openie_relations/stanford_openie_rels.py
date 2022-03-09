@@ -220,10 +220,10 @@ if __name__ == "__main__":
     args.data_dir = abspath(args.data_dir)
     args.output_name = abspath(args.output_name)
     if args.graph:
-        args.graph_out_loc = abspath(args,graph_out_loc)
+        args.graph_out_loc = abspath(args.graph_out_loc)
 
     to_annotate = [join(args.data_dir, f) for f in listdir(args.data_dir) if
             f.endswith('.txt')]
 
     main(args.data_dir, to_annotate, args.affinity_cap, args.output_name,
-            graph, args.graph_out_loc)
+            args.graph, args.graph_out_loc)

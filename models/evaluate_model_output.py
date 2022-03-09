@@ -143,6 +143,6 @@ if __name__ == "__main__":
     args.prediction_dir = abspath(args.prediction_dir)
 
     pred_files = [join(args.prediction_dir, f) for f in
-            listdir(args.prediction_dir) if f.endswith(".jsonl")]
+            listdir(args.prediction_dir)]
 
     main(args.gold_standard, args.out_name, pred_files)
