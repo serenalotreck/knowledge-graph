@@ -173,25 +173,25 @@ def main(data_dir, to_annotate, affinity_cap, output_name, graph, graph_out_loc)
     properties = {'openie.affinity_probability_cap': affinity_cap}
 
     dygiepp_jsonl = []
-    for doc in to_annotate:
+    with CoreNLPClient(annotators=["openie"], output_format="json") as client:
+        for doc in to_annotate:
 
-        # Get the doc_key
-        doc_key = splitext(basename(doc))[0]
+            # Get the doc_key
+            doc_key = splitext(basename(doc))[0]
 
-        # Read in the text
-        with open(doc) as f:
-            text = " ".join(f.read().split('\n'))
+            # Read in the text
+            with open(doc) as f:
+                text = " ".join(f.read().split('\n'))
 
-        # Perform OpenIE
-        with CoreNLPClient(annotators=["openie"], output_format="json") as client:
-            ann = client.annotate(text)
+            # Perform OpenIE
+                ann = client.annotate(text)
 
-        # Convert output to dygiepp format
-        dygiepp_jsonl.append(openie_to_dygiepp(ann, doc_key))
+            # Convert output to dygiepp format
+            dygiepp_jsonl.append(openie_to_dygiepp(ann, doc_key))
 
-        # Graph annotations if requested
-        if graph:
-            graph_annotations(text, properties, doc_key, graph_out_loc)
+            # Graph annotations if requested
+            if graph:
+                graph_annotations(text, properties, doc_key, graph_out_loc)
 
     # Write out dygiepp-formatted output 
     with jsonlines.open(output_name, 'w') as writer:
