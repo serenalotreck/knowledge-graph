@@ -40,7 +40,7 @@ We can run this by setting the flag `--calc-keyword-sim`. This also assumes that
 python word2vec_abstracts.py --abstract-path path/to/abstracts --keywords-path path/to/keywords --model-type cbow --ngrams 2 --sim-threshold 0.9
 ```
 
-This will output a file that contains the similar words to the keywords. It will output in the form of a json file called `{model_type}_{n}-gram_keyword_sim_{threshold}.json` (e.g. `skip_2-gram_keyword_sim_75`).
+This will output a file that contains the similar words to the keywords. It will output in the form of a json file called `{model_type}_{n}-gram_keyword_sim_{threshold}.json` (e.g. `skip_2-gram_keyword_sim_75.json`).
 
 ## TODO for word2vec:
 

@@ -48,7 +48,8 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
                     'Skipping this document for performance calculation.')
             continue
         # Go through each sentence
-        for sent1, sent2 in zip(doc['predicted_ner'], gold_std['ner']):
+        for sent1, sent2 in zip(doc['ner'], gold_std['ner']):
+        # for sent1, sent2 in zip(doc['predicted_ner'], gold_std['ner']):
             # Make the lists into a dict where the key is the sentence idx and
             # the value is the start and end token indices
             gold_sent = {i:l[:2] for i, l in enumerate(sent2)}
@@ -100,8 +101,7 @@ def get_performance_row(pred_file, gold_std_file):
     predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
     precision, recall, f1 = compute_f1(predicted, gold, matched)
 
-    return [basename(pred_file), basename(gold_std_file), precision, recall,
-            f1]
+    return [basename(pred_file), basename(gold_std_file), precision, recall, f1]
 
 
 def main(gold_standard, out_name, predictions):

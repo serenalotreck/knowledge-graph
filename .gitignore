@@ -24,3 +24,4 @@ doc2vec_model
 doc2vec_vectors.csv
 *.wordvectors
 *.json
+*.jsonl
