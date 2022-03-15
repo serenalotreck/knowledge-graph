@@ -7,6 +7,8 @@ Script to run dygiepp models. Outputs into a directory structured as:
     |
     ├── model_predictions
     |
+    ├── allennlp_output
+    |
     └── performance
 
 Author: Serena G. Lotreck
@@ -16,6 +18,7 @@ from os.path import abspath, exists, basename
 from os import makedirs, walk, listdir
 import subprocess
 from random import randint
+from tqdm import trange
 
 
 class PrefixError(Exception):
@@ -69,31 +72,6 @@ def replace_seeds(template, seed_dict):
     return template
 
 
-def get_random_seeds(template):
-    """
-    Get the values of the original random seeds from the template file.
-
-    parameters:
-        template, str: string form of the template file
-
-    returns: orig_random_seeds, dict: keys are the strings that identify the
-        seeds in the template file, values are numbers of original seeds
-    """
-    orig_random_seeds = {}
-    for seed in ['random_seed: ', 'numpy_seed: ', 'pytorch_seed: ']:
-        key_idx = template.find(seed)
-        seed_start_idx = key_idx + len(seed)
-        if seed == 'random_seed: ':
-            seed_end_idx = seed_start_idx + 5
-        elif seed == 'numpy_seed: ':
-            seed_end_idx = seed_start_idx + 4
-        elif seed == 'pytorch_seed: ':
-            seed_end_idx == seed_start_idx + 3
-        orig_random_seeds[seed] = template[seed_start_idx:seed_end_idx]
-
-    return orig_random_seeds
-
-
 def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
               out_prefix):
     """
@@ -127,8 +105,9 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
     # Use default random seed if only one iteration
     if num_iter == 1:
 
-        # Define output file name and location
+        # Define output file name and location for data and allennlp output
         out_path = f'{top_dir}/model_predictions/{model}_predictions_{out_name}.jsonl'
+        allen_out_path = f'{top_dir}/allennlp_output/{model}_allennlp_stdout.txt'
 
         # Run model
         model_run = [
@@ -138,19 +117,25 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
             f'dygie', '--use-dataset-reader', '--output_file {out_path}',
             '--cuda-device', 0, '--silent'
         ]
-        subprocess.run(model_run)
+        out = subprocess.run(model_run, capture_output=True)
+
+        # Save allennlp printing to file
+        with open(allen_out_path, 'w') as myf:
+            myf.write(out.stdout)
 
     else:
 
-        # Save out the original random seeds to put back in at the end
+        # Read in the template
         template_path = f'{dygiepp_path}/training_config/template.libsonnet'
         with open(template_path) as myf:
             template = myf.read()
 
-        orig_random_seeds = get_random_seeds(template)
+        # Save the original template  to save out at the end
+        orig_template = template
 
         # For each iter, generate new random seeds
-        for i in range(num_iter):
+        verboseprint(f'\nRunning model {model} for {num_iter} unique random seeds:')
+        for i in trange(num_iter):
 
             # Generate random seeds
             rand_seeds = {
@@ -167,10 +152,12 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
             with open(template_path, 'w') as myf:
                 myf.write(template)
 
-            # Define save path for model output
+            # Define save path for model output and allennlp output
             out_path = (f'{top_dir}/model_predictions/rand_seed_'
                     f'{rand_seeds["random_seed:"]}_{model}_predictions_'
                     f'{out_name}.jsonl')
+            allen_out_path = (f'{top_dir}/allennlp_output/rand_seed_'
+                    f'{rand_seeds["random_seed:"]}_{model}_allennlp_stdout.txt')
 
             # Run model
             model_run = [
@@ -180,10 +167,15 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
                 '--include-package', f'dygie', '--use-dataset-reader',
                 '--output_file {out_path}', '--cuda-device', 0, '--silent'
             ]
-            subprocess.run(model_run)
+            out = subprocess.run(model_run)
 
-        # Replace original random seeds to avoid confusion later on
-        template = replace_seeds(template, orig_random_seeds)
+            # Save stdout
+            with open(allen_out_path, 'w') as myf:
+                myf.write(out.stdout)
+
+        # Replace modified template with original
+        with open(template_path, 'w') as myf:
+            myf.write(orig_template)
 
 
 def format_data(data, top_dir, out_prefix, dygiepp_path):
@@ -276,10 +268,14 @@ def check_make_filetree(top_dir, format_data):
             # formatting has been requested
             makedirs(formatted_data_path)
 
-        # Check for the other two:
+        # Check for the other three:
         model_predictions_path = f'{top_dir}/model_predictions'
         if not exists(model_predictions_path):
             makedirs(model_predictions_path)
+
+        allennlp_output_path = f'{top_dir}/allennlp_output'
+        if not exists(allennlp_output_path):
+            makedirs(allennlp_output_path)
 
         performance_path = f'{top_dir}/performance'
         if not exists(performance_path):
@@ -301,30 +297,40 @@ def main(top_dir, out_prefix, dygiepp_path, format_data, data, num_iter,
          gold_standard, models_to_run):
 
     # Check if the top_dir & other folders exist already
+    verboseprint('\nChecking if file tree exists and creating it if not...')
     existed = check_make_filetree(top_dir, format_data)
 
     # Make sure no files with the same prefix exist
+    verboseprint('\nMaking sure no files with the given prefix exist...')
     if existed:
         check_prefix(top_dir, out_prefix)
 
     # Check that requested models exist before starting
+    verboseprint('\nMaking sure all requested models are downloaded...')
     check_models(models_to_run)
 
     # Format data
     if format_data:
+        verboseprint('\nFormatting data...')
         formatted_data_path = format_data(data, top_dir, out_prefix,
                                           dygiepp_path)
     else:
+        verboseprint('\nCopying formatted data into new file tree...')
         subprocess.run(["cp", data, f"{top_dir}/formatted_data/"])
         formatted_data_path = f'{top_dir}/formatted_data/{basename(data)}'
 
     # Run models
+    verboseprint('\nRunning models...')
     for model in models_to_run:
+        verboseprint(f'Running model {model}...')
         run_model(formatted_data_path, model, num_iter, dygiepp_path,
                   out_prefix)
 
     # Evaluate
+    verboseprint('\nEvaluating models...')
     evaluate_models(top_dir, gold_standard, out_prefix)
+
+    verboseprint('\n\nDone!\n\n')
 
 
 if __name__ == "__main__":
@@ -376,6 +382,10 @@ if __name__ == "__main__":
         help='List of models to run. Options are ace05, scierc, '
         'scierc-light, genia, and genia-light. Default is all.',
         default=['ace05', 'scierc', 'scierc-light', 'genia', 'genia-light'])
+    parser.add_argument(
+        '-v','--verbose',
+        action='store_true',
+        help='Whether or not to print updates as the script runs.')
 
     args = parser.parse_agrs()
 
@@ -383,6 +393,8 @@ if __name__ == "__main__":
     args.data = abspath(args.data)
     args.dygiepp_path = abspath(args.dygiepp_path)
     args.gold_standard = abspath(args.gold_standard)
+
+    verboseprint = print if args.verbose else lambda *a, **k: None
 
     main(args.top_dir, args.out_prefix, args.dygiepp_path, args.format_data,
          args.data, args.num_iter, args.gold_standard, args.models_to_run)
