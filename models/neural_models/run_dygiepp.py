@@ -66,7 +66,8 @@ def replace_seeds(template, seed_dict):
         seed_start_idx = key_idx + len(seed)
         seed_end_idx = template.find(',', seed_start_idx)
 
-        template = template[:seed_start_idx] + str(val) + template[seed_end_idx:]
+        template = template[:seed_start_idx] + str(
+            val) + template[seed_end_idx:]
 
     return template
 
@@ -133,16 +134,17 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
         orig_template = template
 
         # For each iter, generate new random seeds
-        verboseprint(f'\nRunning model {model} for {num_iter} unique random seeds:')
+        verboseprint(
+            f'\nRunning model {model} for {num_iter} unique random seeds:')
         for i in trange(num_iter):
 
             # Generate random seeds
             main_seed = randint(10000, 99999)
             rand_seeds = {
-                'random_seed: ': main_seed,      # First random seed is 5 digits
+                'random_seed: ': main_seed,  # First random seed is 5 digits
                 'numpy_seed: ': main_seed // 10,  # Second is 4 digits
                 'pytorch_seed: ': main_seed // 100  # Third is 3 digits
-                }
+            }
 
             # Replace seeds
             template = replace_seeds(template, rand_seeds)
@@ -153,10 +155,11 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
 
             # Define save path for model output and allennlp output
             out_path = (f'{top_dir}/model_predictions/rand_seed_'
-                    f'{rand_seeds["random_seed:"]}_{model}_predictions_'
-                    f'{out_name}.jsonl')
-            allen_out_path = (f'{top_dir}/allennlp_output/rand_seed_'
-                    f'{rand_seeds["random_seed:"]}_{model}_allennlp_stdout.txt')
+                        f'{rand_seeds["random_seed:"]}_{model}_predictions_'
+                        f'{out_name}.jsonl')
+            allen_out_path = (
+                f'{top_dir}/allennlp_output/rand_seed_'
+                f'{rand_seeds["random_seed:"]}_{model}_allennlp_stdout.txt')
 
             # Run model
             model_run = [
@@ -378,7 +381,8 @@ if __name__ == "__main__":
         'scierc-light, genia, and genia-light. Default is all.',
         default=['ace05', 'scierc', 'scierc-light', 'genia', 'genia-light'])
     parser.add_argument(
-        '-v','--verbose',
+        '-v',
+        '--verbose',
         action='store_true',
         help='Whether or not to print updates as the script runs.')
 
