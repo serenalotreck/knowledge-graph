@@ -14,7 +14,6 @@ import unify_annotations as ua
 
 
 class TestUnifyAnnotations(unittest.TestCase):
-
     def setUp(self):
 
         self.tmpdir = 'tmp'
@@ -22,9 +21,9 @@ class TestUnifyAnnotations(unittest.TestCase):
         self.annotator2 = 'kenia'
         self.iaa_dir_name = 'last_ten'
         os.makedirs(f'{self.tmpdir}/{self.annotator1}/{self.iaa_dir_name}',
-                exist_ok=True)
+                    exist_ok=True)
         os.makedirs(f'{self.tmpdir}/{self.annotator2}/{self.iaa_dir_name}',
-                exist_ok=True)
+                    exist_ok=True)
 
         txt = """
         The role of ethylene (ET) signaling in the responses of two hybrid
@@ -38,15 +37,14 @@ class TestUnifyAnnotations(unittest.TestCase):
         not a result of deficient antioxidative capacity.
         """
         with open(
-            f'{self.tmpdir}/{self.annotator1}/{self.iaa_dir_name}/txt1.txt',
-            'w') as myf:
+                f'{self.tmpdir}/{self.annotator1}/{self.iaa_dir_name}/txt1.txt',
+                'w') as myf:
             myf.write(txt)
 
         with open(
-            f'{self.tmpdir}/{self.annotator2}/{self.iaa_dir_name}/txt1.txt',
-            'w') as myf:
+                f'{self.tmpdir}/{self.annotator2}/{self.iaa_dir_name}/txt1.txt',
+                'w') as myf:
             myf.write(txt)
-
 
         ann1 = """T1\tENTITY 12 20\tethylene
 T2\tENTITY 22 24\tET
@@ -100,11 +98,9 @@ T16\tENTITY 143 148\tO(3);
 T20\tENTITY 411 419\tclone 51
 """
 
-
     def tearDown(self):
 
         shutil.rmtree(self.tmpdir)
-
 
     def test_unify_annotations_ents(self):
 
@@ -114,7 +110,6 @@ T20\tENTITY 411 419\tclone 51
             ann_file = myf.read()
 
         self.assertEqual(ann_file, self.right_answer)
-
 
     def test_unify_annotations_rels(self):
 

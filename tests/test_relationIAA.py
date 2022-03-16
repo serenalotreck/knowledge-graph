@@ -8,7 +8,6 @@ import os
 import shutil
 import sys
 
-
 sys.path.append('../annotation/iaa')
 
 import pandas as pd
@@ -17,8 +16,6 @@ import relationIAA as riaa
 
 
 class TestGetOffsets(unittest.TestCase):
-
-
     def setUp(self):
 
         self.one_offset = '24 29\tPROT1\n'
@@ -27,13 +24,11 @@ class TestGetOffsets(unittest.TestCase):
         self.right_answer_single = [('24', '29')]
         self.right_answer_multiple = [('24', '29'), ('42', '44'), ('79', '82')]
 
-
     def test_get_offstes_single(self):
 
         offsets = riaa.get_offsets(self.one_offset, [])
 
         self.assertEqual(offsets, self.right_answer_single)
-
 
     def test_get_offsets_multiple(self):
 
@@ -43,19 +38,20 @@ class TestGetOffsets(unittest.TestCase):
 
 
 class TestFormatRelation(unittest.TestCase):
-
-
     def setUp(self):
 
         self.rel = '\tinteracts-indirect Arg1:T1 Arg2:T4\n'
 
-        self.line_dict = {'T1':'\tPROTEIN 24 29\tPROT1\n',
-                          'T4':'\tDNA 42 44\tPRO1\n',
-                          'R1':'\tinteracts-indirect Arg1:T1 Arg2:T4\n'}
+        self.line_dict = {
+            'T1': '\tPROTEIN 24 29\tPROT1\n',
+            'T4': '\tDNA 42 44\tPRO1\n',
+            'R1': '\tinteracts-indirect Arg1:T1 Arg2:T4\n'
+        }
 
-        self.right_answer = ['interacts-indirect', ([('24','29')], 'PROTEIN'),
-                                                    ([('42','44')], 'DNA')]
-
+        self.right_answer = [
+            'interacts-indirect', ([('24', '29')], 'PROTEIN'),
+            ([('42', '44')], 'DNA')
+        ]
 
     def test_format_relation(self):
 
@@ -65,8 +61,6 @@ class TestFormatRelation(unittest.TestCase):
 
 
 class TestMakeAnnDF(unittest.TestCase):
-
-
     def setUp(self):
 
         self.tmpdir = "tmp"
@@ -90,30 +84,25 @@ R2\tinteracts-direct Arg1:T4 Arg2:T5"""
         with open(self.ann_empty_path, 'w') as myf:
             myf.write(ann_empty)
 
+        self.ann_full_df = pd.DataFrame({
+            'Type': ['interacts-indirect', 'interacts-direct'],
+            'Arg1': [([('12', '35')], 'Biochemical_pathway'),
+                     ([('136', '141')], 'Inorganic_compound_other')],
+            'Arg2': [([('271', '273')], 'Plant_hormone'),
+                     ([('143', '147')], 'Inorganic_compound_other')]
+        })
 
-        self.ann_full_df = pd.DataFrame({'Type':['interacts-indirect',
-                                            'interacts-direct'],
-                                    'Arg1':[([('12','35')], 'Biochemical_pathway'),
-                                            ([('136','141')],
-                                            'Inorganic_compound_other')],
-                                    'Arg2':[([('271','273')], 'Plant_hormone'),
-                                            ([('143','147')],
-                                            'Inorganic_compound_other')]})
-
-        self.ann_empty_df = pd.DataFrame([], columns=['Type','Arg1','Arg2'])
-
+        self.ann_empty_df = pd.DataFrame([], columns=['Type', 'Arg1', 'Arg2'])
 
     def tearDown(self):
 
         shutil.rmtree(self.tmpdir)
-
 
     def test_make_ann_df_full(self):
 
         ann_df = riaa.make_ann_df(self.ann_full_path)
 
         assert_frame_equal(ann_df, self.ann_full_df)
-
 
     def test_make_ann_df_empty(self):
 
@@ -122,7 +111,5 @@ R2\tinteracts-direct Arg1:T4 Arg2:T5"""
         assert_frame_equal(ann_df, self.ann_empty_df)
 
 
-
 if __name__ == "__main__":
     unittest.main()
-

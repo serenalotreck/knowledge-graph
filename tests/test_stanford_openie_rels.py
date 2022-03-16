@@ -112,20 +112,17 @@ class TestGetDocRels(unittest.TestCase):
         self.right_answer_2 = []
         self.right_answer_3 = [[[0, 1, 3, 3, 'is']]]
 
-
     def test_get_doc_rels_mult_sent(self):
 
         rels = sor.get_doc_rels(self.ann1)
 
         self.assertEqual(rels, self.right_answer_1)
 
-
     def test_get_doc_rels_no_text(self):
 
         rels = sor.get_doc_rels(self.ann2)
 
         self.assertEqual(rels, self.right_answer_2)
-
 
     def test_get_doc_rels_one_sent(self):
 
