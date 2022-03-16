@@ -49,6 +49,10 @@ def evaluate_models(top_dir, gold_standard, out_prefix):
 def replace_seeds(template, seed_dict):
     """
     Replace the values of the 3 random seeds in the template.libsonnet file.
+    Expects template input to be the correctly-formatted libsonnet file from
+    the dygiepp repo, will fail if the seeds are not identified by strings
+    "random_seed: ", "numpy_seed: ", and "pytorch_seed: " respectively, or if
+    they are not immediately followed by a comma.
 
     parameters:
         template, str: string form of the template file
@@ -60,14 +64,9 @@ def replace_seeds(template, seed_dict):
     for seed, val in seed_dict.items():
         key_idx = template.find(seed)
         seed_start_idx = key_idx + len(seed)
-        if seed == 'random_seed: ':
-            seed_end_idx = seed_start_idx + 5
-        elif seed == 'numpy_seed: ':
-            seed_end_idx = seed_start_idx + 4
-        elif seed == 'pytorch_seed: ':
-            seed_end_idx == seed_start_idx + 3
+        seed_end_idx = template.find(',', seed_start_idx)
 
-        template[seed_start_idx:seed_end_idx] = val
+        template = template[:seed_start_idx] + str(val) + template[seed_end_idx:]
 
     return template
 
@@ -138,11 +137,11 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
         for i in trange(num_iter):
 
             # Generate random seeds
+            main_seed = randint(10000, 99999)
             rand_seeds = {
-                'random_seed: ':
-                randint(10000, 99999),              # First random seed is 5 digits
-                'numpy_seed: ': random_seed // 10,  # Second is 4 digits
-                'pytorch_seed: ': numpy_seed // 10  # Third is 3 digits
+                'random_seed: ': main_seed,      # First random seed is 5 digits
+                'numpy_seed: ': main_seed // 10,  # Second is 4 digits
+                'pytorch_seed: ': main_seed // 100  # Third is 3 digits
                 }
 
             # Replace seeds
@@ -246,14 +245,13 @@ def check_prefix(top_dir, out_prefix):
                 )
 
 
-def check_make_filetree(top_dir, format_data):
+def check_make_filetree(top_dir):
     """
     Checks if the top_dir exists already, as well as the correct
     subdirectories. Creates any missing directories.
 
     parameters:
         top_dir, str: path to top directory for output file structure
-        format_data, bool: whether or not to format raw data
 
     returns: True if top_dir exists, False otherwise
     """
@@ -263,12 +261,8 @@ def check_make_filetree(top_dir, format_data):
         # If it does, check for correct subdirectories
         formatted_data_path = f'{top_dir}/formatted_data'
         if not exists(formatted_data_path):
-
-            # Make formatted_data directory if it doesn't exist and data
-            # formatting has been requested
             makedirs(formatted_data_path)
 
-        # Check for the other three:
         model_predictions_path = f'{top_dir}/model_predictions'
         if not exists(model_predictions_path):
             makedirs(model_predictions_path)
@@ -288,6 +282,7 @@ def check_make_filetree(top_dir, format_data):
         makedirs(top_dir)
         makedirs(f'{top_dir}/formatted_data')
         makedirs(f'{top_dir}/model_predictions')
+        makedirs(f'{top_dir}/allennlp_output')
         makedirs(f'{top_dir}/performance')
 
         return False
