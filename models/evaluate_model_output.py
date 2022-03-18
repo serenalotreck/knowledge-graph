@@ -14,6 +14,7 @@ from dygie.training.f1 import compute_f1 # Must have dygiepp developed in env
 import jsonlines
 import pandas as pd
 
+
 def get_f1_input(gold_standard_dicts, prediction_dicts):
     """
     Get the number of true and false postives and false negatives for the
@@ -44,7 +45,7 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
         try:
             gold_std = gold_standard_dict[doc['doc_key']]
         except KeyError:
-            print(f'Document {doc["doc_key"]} is not in the gold standard. '
+            verboseprint(f'Document {doc["doc_key"]} is not in the gold standard. '
                     'Skipping this document for performance calculation.')
             continue
         # Go through each sentence
@@ -107,22 +108,24 @@ def get_performance_row(pred_file, gold_std_file):
 def main(gold_standard, out_name, predictions):
 
     # Calculate performance
-    print('\nCalculating performance...')
+    verboseprint('\nCalculating performance...')
     df_rows = []
     for model in predictions:
-        df_rows.append( get_performance_row(model, gold_standard))
+        df_rows.append(get_performance_row(model, gold_standard))
+
+    verboseprint(df_rows)
 
     # Make df
-    print('\nMaking dataframe...')
+    verboseprint('\nMaking dataframe...')
     df = pd.DataFrame(df_rows, columns=['pred_file', 'gold_std_file',
                                         'precision','recall','F1'])
-    print(f'Snapshot of dataframe:\n{df.head()}')
+    verboseprint(f'Snapshot of dataframe:\n{df.head()}')
 
     # Save
-    print(f'\nSaving file as {out_name}')
+    verboseprint(f'\nSaving file as {out_name}')
     df.to_csv(out_name, index=False)
 
-    print('\nDone!\n')
+    verboseprint('\nDone!\n')
 
 
 if __name__ == "__main__":
@@ -135,6 +138,11 @@ if __name__ == "__main__":
             help='Name of save file for output (including path)')
     parser.add_argument('prediction_dir', type=str,
             help='Path to directory with dygiepp-formatted model outputs')
+    parser.add_argument('-use_prefix', type=str,
+            help='If a prefix is provided, only calculates performance for '
+            'files beginning with the prefix in the directory.', default='')
+    parser.add_argument('--verbose', '-v', action='store_true',
+            help='If provided, script progress will be printed')
 
     args = parser.parse_args()
 
@@ -142,7 +150,9 @@ if __name__ == "__main__":
     args.out_name = abspath(args.out_name)
     args.prediction_dir = abspath(args.prediction_dir)
 
+    verboseprint = print if args.verbose else lambda *a, **k: None
+
     pred_files = [join(args.prediction_dir, f) for f in
-            listdir(args.prediction_dir)]
+            listdir(args.prediction_dir) if f.startswith(args.use_prefix)]
 
     main(args.gold_standard, args.out_name, pred_files)
