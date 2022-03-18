@@ -42,7 +42,8 @@ def evaluate_models(top_dir, gold_standard, out_prefix):
     """
     save_name = f'{top_dir}/performance/{out_prefix}_model_performance.csv'
     evaluate = [
-        "python", abspath("../evaluate_model_output.py"), gold_standard, save_name,
+        "python",
+        abspath("../evaluate_model_output.py"), gold_standard, save_name,
         f'{top_dir}/model_predictions/', '-use_prefix', out_prefix
     ]
     subprocess.run(evaluate)
@@ -107,7 +108,7 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
     json_replace = (
         f'jq -c {replacement} {formatted_data_path} > '
         f'{formatted_data_path}.TEMP && mv {formatted_data_path}.TEMP {formatted_data_path}'
-    ) # Not the world's safest thing to just add TEMP, but couldn't get
+    )  # Not the world's safest thing to just add TEMP, but couldn't get
     # $(mktemp) to work -- didn't recognize it existed in the second command,
     # and couldn't get it to work piped in the same command. It's also
     # apparently not super great to use shell=True, docs say if you use it,
@@ -126,11 +127,11 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
         allen_out_path = f'{top_dir}/allennlp_output/{out_name}_{model}_allennlp_stdout.txt'
 
         # Run model
-        model_run = (f'allennlp predict {dygiepp_path}/pretrained/{model}.tar.gz '
+        model_run = (
+            f'allennlp predict {dygiepp_path}/pretrained/{model}.tar.gz '
             f'{formatted_data_path} --predictor dygie --include-package '
             f'dygie --use-dataset-reader --output-file {out_path} '
-            '--cuda-device 0 --silent'
-        )
+            '--cuda-device 0 --silent')
         out = subprocess.run(model_run, capture_output=True, shell=True)
 
         # Convert bytes to string so they can be written to a file
@@ -175,17 +176,19 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
                 myf.write(template)
 
             # Define save path for model output and allennlp output
-            out_path = (f'{top_dir}/model_predictions/{out_name}_rand_seed_'
-                        f'{rand_seeds["random_seed: "]}_{model}_predictions_.jsonl')
+            out_path = (
+                f'{top_dir}/model_predictions/{out_name}_rand_seed_'
+                f'{rand_seeds["random_seed: "]}_{model}_predictions_.jsonl')
             allen_out_path = (
                 f'{top_dir}/allennlp_output/{out_name}_rand_seed_'
                 f'{rand_seeds["random_seed: "]}_{model}_allennlp_stdout.txt')
 
             # Run model
-            model_run = (f'allennlp predict '
-            f'{dygiepp_path}/pretrained/{model}.tar.gz {formatted_data_path} '
-            '--predictor dygie --include-package dygie --use-dataset-reader '
-            f'--output-file {out_path} --cuda-device 0 --silent')
+            model_run = (
+                f'allennlp predict '
+                f'{dygiepp_path}/pretrained/{model}.tar.gz {formatted_data_path} '
+                '--predictor dygie --include-package dygie --use-dataset-reader '
+                f'--output-file {out_path} --cuda-device 0 --silent')
             out = subprocess.run(model_run, capture_output=True, shell=True)
 
             # Convert bytes to string so they can be written to a file
@@ -335,19 +338,22 @@ def main(top_dir, out_prefix, dygiepp_path, format_data, data, num_iter,
     # Format data
     if format_data:
         verboseprint('\nFormatting data...')
-        formatted_data_path = format_new_data(data, top_dir, out_prefix, dygiepp_path)
+        formatted_data_path = format_new_data(data, top_dir, out_prefix,
+                                              dygiepp_path)
     else:
         verboseprint('\nCopying formatted data into new file tree...')
-        subprocess.run(["cp", data,
-            f"{top_dir}/formatted_data/{out_prefix}_{basename(data)}"])
+        subprocess.run([
+            "cp", data,
+            f"{top_dir}/formatted_data/{out_prefix}_{basename(data)}"
+        ])
         formatted_data_path = f'{top_dir}/formatted_data/{out_prefix}_{basename(data)}'
 
     # Run models
     verboseprint('\nRunning models...')
     for model in models_to_run:
         verboseprint(f'Running model {model}...')
-        run_model(formatted_data_path, model, num_iter, dygiepp_path,
-                  top_dir, out_prefix)
+        run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
+                  out_prefix)
 
     # Evaluate
     verboseprint('\nEvaluating models...')
@@ -404,8 +410,10 @@ if __name__ == "__main__":
         nargs='+',
         help='List of models to run. Options are ace05-relation, scierc, '
         'scierc-lightweight, genia, and genia-lightweight. Default is all.',
-        default=['ace05-relation', 'scierc', 'scierc-lightweight', 'genia',
-            'genia-lightweight'])
+        default=[
+            'ace05-relation', 'scierc', 'scierc-lightweight', 'genia',
+            'genia-lightweight'
+        ])
     parser.add_argument(
         '-v',
         '--verbose',
