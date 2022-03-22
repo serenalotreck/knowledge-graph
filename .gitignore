@@ -10,4 +10,5 @@ data_retrieval/oa_subset/text_ids/
 data/
 job_scripts/
 jupyter_notebooks/.ipynb_checkpoints
+jupyter_notebooks/old_notebooks/
 __pycache__/
