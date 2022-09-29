@@ -98,6 +98,7 @@ def get_performance_row(pred_file, gold_std_file):
     pred_names = [pred["doc_key"] for pred in pred_dicts]
     gold_std_names = [gold["doc_key"] for gold in gold_std_dicts]
 
+    # Make sampling loop here
     # Calculate performance
     predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
     precision, recall, f1 = compute_f1(predicted, gold, matched)

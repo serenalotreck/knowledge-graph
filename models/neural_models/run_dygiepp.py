@@ -49,31 +49,6 @@ def evaluate_models(top_dir, gold_standard, out_prefix):
     subprocess.run(evaluate)
 
 
-def replace_seeds(template, seed_dict):
-    """
-    Replace the values of the 3 random seeds in the template.libsonnet file.
-    Expects template input to be the correctly-formatted libsonnet file from
-    the dygiepp repo, will fail if the seeds are not identified by strings
-    "random_seed: ", "numpy_seed: ", and "pytorch_seed: " respectively, or if
-    they are not immediately followed by a comma.
-
-    parameters:
-        template, str: string form of the template file
-        seed_dict, dict: keys are the strings that identify the seeds in the
-            template file, values are the numbers to set as random seeds
-
-    returns: template, str: template string with replaced values
-    """
-    for seed, val in seed_dict.items():
-        key_idx = template.find(seed)
-        seed_start_idx = key_idx + len(seed)
-        seed_end_idx = template.find(',', seed_start_idx)
-
-        template = template[:seed_start_idx] + str(
-            val) + template[seed_end_idx:]
-
-    return template
-
 
 def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
               out_prefix):
@@ -394,12 +369,6 @@ if __name__ == "__main__":
         help='Path to data. Processed if --format_data is not specified. '
         'If already formatted, file is copied to formatted_data to be '
         'manipulated (change dataset name) for model input.')
-    parser.add_argument(
-        '-num_iter',
-        type=int,
-        help='Number of time to run models with different random seeds. '
-        'Default is 1, in which case the default random seeds from '
-        'DyGIE++ will be used.')
     parser.add_argument(
         'gold_standard',
         type=str,
