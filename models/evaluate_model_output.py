@@ -13,6 +13,33 @@ from os import listdir
 from dygie.training.f1 import compute_f1  # Must have dygiepp developed in env
 import jsonlines
 import pandas as pd
+import numpy as np
+
+
+def calculate_CI(prec_samples, rec_samples, f1_samples):
+    """
+    Calculates CI from bootstrap samples using the percentile method with
+    alpha = 0.05 (95% CI).
+    
+    parameters:
+        prec_samples, list of float: list of precision values for bootstraps
+        rec_samples, list of float: list of recall values for bootstraps
+        f1_samples, list of float: list of f1 values for bootstraps
+        
+    returns:
+        prec_CI, tuple of float: CI for precision
+        rec_CI, tuple of float: CI for recall
+        f1_CI, tuple of float: CI for F1 score
+    """
+    CIs = {}
+    for name, samp_set in {'prec_samples':prec_samples,
+                           'rec_samples':rec_samples, 'f1_samples':f1_samples}:
+        lower_bound = np.percentile(samp_set, 100*(alpha/2))
+        upper_bound = np.percentile(samp_set, 100*(1-alpha/2))
+        name = name.split('_')[0] + '_CI'
+        CIs[name] = (lower_bound, upper_bound)
+        
+    return CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']
 
 
 def get_f1_input(gold_standard_dicts, prediction_dicts):
@@ -73,8 +100,42 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
 
     return predicted, gold, matched
 
+def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
+    """
+    Draw bootsrtap samples.
+    
+    parameters:
+        pred_dicts, list of dict: dicts of model predictions
+        gold_std_dicts, list of dict: dicts of gold standard annotations
+        num_boot, int: number of bootstrap samples to draw
+        
+    returns:
+        prec_samples, list of float: list of precision values for bootstraps
+        rec_samples, list of float: list of recall values for bootstraps
+        f1_samples, list of float: list of f1 values for bootstraps
+    """
+    prec_samples = []
+    rec_samples = []
+    f1_samples = []
+    for _ in range(num_boot):
+        # Sample prediction dicts with replacement
+        pred_samp = np.random.choice(pred_dicts, size=len(pred_dicts), replace=True)
+        # Get indices of the sampled instances in the pred_dicts list
+        idx_list = [pred_dicts.index(i) for i in pred_samp]
+        # Since the two lists are sorted the same, can use indices to get equivalent docs in gold std
+        gold_samp = np.array([gold_std_dicts[i] for i in idx_list])
+        # Calculate performance for the sample
+        predicted, gold, matched = get_f1_input(gold_samp, pred_samp)
+        precision, recall, f1 = compute_f1(predicted, gold, matched)
+        # Append each of the performance values to their respective sample lists
+        prec_samples.append(precision)
+        rec_samples.append(recall)
+        f1_samples.append(f1)
+        
+    return prec_samples, rec_samples, f1_samples
 
-def get_performance_row(pred_file, gold_std_file):
+
+def get_performance_row(pred_file, gold_std_file, num_boot):
     """
     Gets performance metrics and returns as a list.
 
@@ -95,27 +156,34 @@ def get_performance_row(pred_file, gold_std_file):
         for obj in reader:
             pred_dicts.append(obj)
 
-    pred_names = [pred["doc_key"] for pred in pred_dicts]
-    gold_std_names = [gold["doc_key"] for gold in gold_std_dicts]
-
-    # Make sampling loop here
-    # Calculate performance
-    predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
-    precision, recall, f1 = compute_f1(predicted, gold, matched)
-
+    # Sort the pred and gold lists by doc key to make sure they're in the same order
+    gold_std_dicts = sorted(gold_std_dicts, key=lambda d: d['doc_key'])
+    pred_dicts = sorted(pred_dicts, key=lambda d: d['doc_key'])
+    
+    # Bootstrap sampling
+    prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts, gold_std_dicts, num_boot)
+        
+    # Calculate confidence interval
+    prec_CI, rec_CI, f1_CI = calculate_CI(prec_samples, rec_samples, f1_samples)
+    
+    # Get means
+    precision = np.mean(prec_samples)
+    recall = np.mean(rec_samples)
+    f1 = np.mean(f1_samples)
+    
     return [
         basename(pred_file),
-        basename(gold_std_file), precision, recall, f1
+        basename(gold_std_file), precision, recall, f1, prec_CI, rec_CI, f1_CI
     ]
 
 
-def main(gold_standard, out_name, predictions):
+def main(gold_standard, out_name, predictions, num_boot):
 
     # Calculate performance
     verboseprint('\nCalculating performance...')
     df_rows = []
     for model in predictions:
-        df_rows.append(get_performance_row(model, gold_standard))
+        df_rows.append(get_performance_row(model, gold_standard, num_boot))
 
     verboseprint(df_rows)
 
@@ -123,7 +191,8 @@ def main(gold_standard, out_name, predictions):
     verboseprint('\nMaking dataframe...')
     df = pd.DataFrame(
         df_rows,
-        columns=['pred_file', 'gold_std_file', 'precision', 'recall', 'F1'])
+        columns=['pred_file', 'gold_std_file', 'precision', 'recall', 'F1', 
+                 'precision_CI', 'recall_CI', 'F1_CI'])
     verboseprint(f'Snapshot of dataframe:\n{df.head()}')
 
     # Save
@@ -144,9 +213,16 @@ if __name__ == "__main__":
                         type=str,
                         help='Name of save file for output (including path)')
     parser.add_argument(
-        'prediction_dir',
+        'prediction_paths',
         type=str,
-        help='Path to directory with dygiepp-formatted model outputs')
+        help='Path to .txt file containing full paths to dygiepp-formatted model '
+        'outputs, one on each line')
+    parser.add_argument(
+        '-num_boot',
+        type=int,
+        help='Number of bootstrap samples to use for calculating CI, '
+        'default is 500',
+        default=500)
     parser.add_argument(
         '-use_prefix',
         type=str,
@@ -162,13 +238,15 @@ if __name__ == "__main__":
 
     args.gold_standard = abspath(args.gold_standard)
     args.out_name = abspath(args.out_name)
-    args.prediction_dir = abspath(args.prediction_dir)
+    args.prediction_paths = abspath(args.prediction_dir)
 
     verboseprint = print if args.verbose else lambda *a, **k: None
 
+    with open(args.prediction_paths) as myf:
+        pred_paths = myf.readlines()
     pred_files = [
         join(args.prediction_dir, f) for f in listdir(args.prediction_dir)
         if f.startswith(args.use_prefix)
     ]
 
-    main(args.gold_standard, args.out_name, pred_files)
+    main(args.gold_standard, args.out_name, pred_files, args.num_boot)
