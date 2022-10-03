@@ -100,6 +100,7 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
 
     return predicted, gold, matched
 
+
 def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
     """
     Draw bootsrtap samples.
@@ -135,16 +136,20 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
     return prec_samples, rec_samples, f1_samples
 
 
-def get_performance_row(pred_file, gold_std_file, num_boot):
+def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
     """
     Gets performance metrics and returns as a list.
 
     parameters:
         pred_file, str: name of the file used for predictions
         gold_std_file, str: name of the gold standard file
+        bootstrap, bool, whether or not to bootstrap a confidence interval
+        num_boot, int: if bootstrap is True, how many bootstrap samples to take
 
     returns:
         row, list: [pred file name, gold std file name, precision, recall, f1]
+            if bootstrap is false, same columns plus [prec_CI, rec_CI, f1_CI]
+            if bootstrap is true
     """
     # Read in the files
     gold_std_dicts = []
@@ -161,29 +166,41 @@ def get_performance_row(pred_file, gold_std_file, num_boot):
     pred_dicts = sorted(pred_dicts, key=lambda d: d['doc_key'])
     
     # Bootstrap sampling
-    prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts, gold_std_dicts, num_boot)
-        
-    # Calculate confidence interval
-    prec_CI, rec_CI, f1_CI = calculate_CI(prec_samples, rec_samples, f1_samples)
+    if boostrap:
+        prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts, gold_std_dicts, num_boot)
+
+        # Calculate confidence interval
+        prec_CI, rec_CI, f1_CI = calculate_CI(prec_samples, rec_samples, f1_samples)
+
+        # Get means
+        precision = np.mean(prec_samples)
+        recall = np.mean(rec_samples)
+        f1 = np.mean(f1_samples)
+
+        return [
+            basename(pred_file),
+            basename(gold_std_file), precision, recall, f1, prec_CI, rec_CI, f1_CI
+        ]
     
-    # Get means
-    precision = np.mean(prec_samples)
-    recall = np.mean(rec_samples)
-    f1 = np.mean(f1_samples)
-    
-    return [
-        basename(pred_file),
-        basename(gold_std_file), precision, recall, f1, prec_CI, rec_CI, f1_CI
-    ]
+    else:
+        # Calculate performance
+        predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
+        precision, recall, f1 = compute_f1(predicted, gold, matched)
+
+        return [
+            basename(pred_file),
+            basename(gold_std_file), precision, recall, f1
+        ]
 
 
-def main(gold_standard, out_name, predictions, num_boot):
+def main(gold_standard, out_name, predictions, boostrap, num_boot):
 
     # Calculate performance
     verboseprint('\nCalculating performance...')
     df_rows = []
     for model in predictions:
-        df_rows.append(get_performance_row(model, gold_standard, num_boot))
+        df_rows.append(get_performance_row(model, gold_standard,
+                                           bootstrap, num_boot))
 
     verboseprint(df_rows)
 
@@ -217,6 +234,10 @@ if __name__ == "__main__":
         type=str,
         help='Path to .txt file containing full paths to dygiepp-formatted model '
         'outputs, one on each line')
+    parser.add_argument('--boostrap', action='store_true',
+                        help='Whether or not to bootstrap a confidence interval '
+                        'for performance metrics. Specify for deterministic model '
+                        'output.')
     parser.add_argument(
         '-num_boot',
         type=int,
@@ -238,15 +259,15 @@ if __name__ == "__main__":
 
     args.gold_standard = abspath(args.gold_standard)
     args.out_name = abspath(args.out_name)
-    args.prediction_paths = abspath(args.prediction_dir)
+    args.prediction_paths = abspath(args.prediction_paths)
 
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     with open(args.prediction_paths) as myf:
         pred_paths = myf.readlines()
     pred_files = [
-        join(args.prediction_dir, f) for f in listdir(args.prediction_dir)
+        join(args.prediction_paths, f) for f in listdir(args.prediction_paths)
         if f.startswith(args.use_prefix)
     ]
 
-    main(args.gold_standard, args.out_name, pred_files, args.num_boot)
+    main(args.gold_standard, args.out_name, pred_files, args.bootstrap, args.num_boot)

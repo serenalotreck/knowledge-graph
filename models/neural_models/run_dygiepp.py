@@ -50,7 +50,7 @@ def evaluate_models(top_dir, gold_standard, out_prefix):
 
 
 
-def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
+def run_model(formatted_data_path, model, dygiepp_path, top_dir,
               out_prefix):
     """
     Run a dygiepp model with a given number of random seed iterations. Replaces
@@ -60,8 +60,6 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
     parameters:
         formatted_data_path, str: path to formatted data
         model, str: name of the model to run
-        num_iter, int: number of times to run the model with a unique random
-            seed
         dygiepp_path, str: path to dygiepp installation
         top_dir, str: path to top level output dir
         out_prefix, str: prefix to prepend to file names
@@ -94,92 +92,28 @@ def run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
     # Define the base of all output file names
     out_name = splitext(basename(formatted_data_path))[0]
 
-    # Use default random seed if only one iteration
-    if num_iter == 1:
+    # Define output file name and location for data and allennlp output
+    out_path = f'{top_dir}/model_predictions/{out_name}_{model}_predictions.jsonl'
+    allen_out_path = f'{top_dir}/allennlp_output/{out_name}_{model}_allennlp_stdout.txt'
 
-        # Define output file name and location for data and allennlp output
-        out_path = f'{top_dir}/model_predictions/{out_name}_{model}_predictions.jsonl'
-        allen_out_path = f'{top_dir}/allennlp_output/{out_name}_{model}_allennlp_stdout.txt'
+    # Run model
+    model_run = (
+        f'allennlp predict {dygiepp_path}/pretrained/{model}.tar.gz '
+        f'{formatted_data_path} --predictor dygie --include-package '
+        f'dygie --use-dataset-reader --output-file {out_path} '
+        '--cuda-device 0 --silent')
+    out = subprocess.run(model_run, capture_output=True, shell=True)
 
-        # Run model
-        model_run = (
-            f'allennlp predict {dygiepp_path}/pretrained/{model}.tar.gz '
-            f'{formatted_data_path} --predictor dygie --include-package '
-            f'dygie --use-dataset-reader --output-file {out_path} '
-            '--cuda-device 0 --silent')
-        out = subprocess.run(model_run, capture_output=True, shell=True)
+    # Convert bytes to string so they can be written to a file
+    stdout_s = out.stdout.decode("utf-8")
+    stderr_s = out.stderr.decode("utf-8")
 
-        # Convert bytes to string so they can be written to a file
-        stdout_s = out.stdout.decode("utf-8")
-        stderr_s = out.stderr.decode("utf-8")
-
-        # Save stdout
-        with open(allen_out_path, 'w') as myf:
-            myf.write('====> STDOUT <====\n\n')
-            myf.write(stdout_s)
-            myf.write('\n\n====> STDERR <====\n\n')
-            myf.write(stderr_s)
-
-    else:
-
-        # Read in the template
-        template_path = f'{dygiepp_path}/training_config/template.libsonnet'
-        with open(template_path) as myf:
-            template = myf.read()
-
-        # Save the original template  to save out at the end
-        orig_template = template
-
-        # For each iter, generate new random seeds
-        verboseprint(
-            f'\nRunning model {model} for {num_iter} unique random seeds:')
-        for i in trange(num_iter):
-
-            # Generate random seeds
-            main_seed = randint(10000, 99999)
-            rand_seeds = {
-                'random_seed: ': main_seed,  # First random seed is 5 digits
-                'numpy_seed: ': main_seed // 10,  # Second is 4 digits
-                'pytorch_seed: ': main_seed // 100  # Third is 3 digits
-            }
-
-            # Replace seeds
-            template = replace_seeds(template, rand_seeds)
-
-            # Write out new template file
-            with open(template_path, 'w') as myf:
-                myf.write(template)
-
-            # Define save path for model output and allennlp output
-            out_path = (
-                f'{top_dir}/model_predictions/{out_name}_rand_seed_'
-                f'{rand_seeds["random_seed: "]}_{model}_predictions_.jsonl')
-            allen_out_path = (
-                f'{top_dir}/allennlp_output/{out_name}_rand_seed_'
-                f'{rand_seeds["random_seed: "]}_{model}_allennlp_stdout.txt')
-
-            # Run model
-            model_run = (
-                f'allennlp predict '
-                f'{dygiepp_path}/pretrained/{model}.tar.gz {formatted_data_path} '
-                '--predictor dygie --include-package dygie --use-dataset-reader '
-                f'--output-file {out_path} --cuda-device 0 --silent')
-            out = subprocess.run(model_run, capture_output=True, shell=True)
-
-            # Convert bytes to string so they can be written to a file
-            stdout_s = out.stdout.decode("utf-8")
-            stderr_s = out.stderr.decode("utf-8")
-
-            # Save stdout
-            with open(allen_out_path, 'w') as myf:
-                myf.write('====> STDOUT <====\n\n')
-                myf.write(stdout_s)
-                myf.write('\n\n====> STDERR <====\n\n')
-                myf.write(stderr_s)
-
-        # Replace modified template with original
-        with open(template_path, 'w') as myf:
-            myf.write(orig_template)
+    # Save stdout
+    with open(allen_out_path, 'w') as myf:
+        myf.write('====> STDOUT <====\n\n')
+        myf.write(stdout_s)
+        myf.write('\n\n====> STDERR <====\n\n')
+        myf.write(stderr_s)
 
 
 def format_new_data(data, top_dir, out_prefix, dygiepp_path):
@@ -233,7 +167,7 @@ def check_models(models_to_run, dygiepp_path):
 def check_prefix(top_dir, out_prefix):
     """
     Checks if any files in the tree exist with the same file prefix, in order
-    to prevent files from being overwritte. Raises an exception if any files
+    to prevent files from being overwritten. Raises an exception if any files
     are found with that prefix.
 
     parameters:
