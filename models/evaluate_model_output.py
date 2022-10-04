@@ -230,10 +230,9 @@ if __name__ == "__main__":
                         type=str,
                         help='Name of save file for output (including path)')
     parser.add_argument(
-        'prediction_paths',
+        'prediction_dir',
         type=str,
-        help='Path to .txt file containing full paths to dygiepp-formatted model '
-        'outputs, one on each line')
+        help='Path to directory with dygiepp-formatted model outputs')
     parser.add_argument('--boostrap', action='store_true',
                         help='Whether or not to bootstrap a confidence interval '
                         'for performance metrics. Specify for deterministic model '
@@ -259,14 +258,12 @@ if __name__ == "__main__":
 
     args.gold_standard = abspath(args.gold_standard)
     args.out_name = abspath(args.out_name)
-    args.prediction_paths = abspath(args.prediction_paths)
+    args.prediction_dir = abspath(args.prediction_dir)
 
     verboseprint = print if args.verbose else lambda *a, **k: None
 
-    with open(args.prediction_paths) as myf:
-        pred_paths = myf.readlines()
     pred_files = [
-        join(args.prediction_paths, f) for f in listdir(args.prediction_paths)
+        join(args.prediction_dir, f) for f in listdir(args.prediction_dir)
         if f.startswith(args.use_prefix)
     ]
 

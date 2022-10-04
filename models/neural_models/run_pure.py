@@ -11,14 +11,26 @@ saved, and instead requires the model directory to be specified
 as the output directory, and saves results there. Additionally,
 there is no option to change the name of the output files, so the
 outputs will be overwritten every time the model is run. For this
-script, since the evaluation is external, the models can be run
-multiple times without losing their evaluation scores, as these are
-generated and saved separately in out_loc.
+reason, PURE output files are copied with the out_prefix to the 
+out_loc directory with the number of the run, so that all results
+are accessible, and the evaluation is performed from there.
+
+Output directory structured as:
+
+    out_loc
+    |
+    ├── formatted_data
+    |
+    ├── model_predictions
+    |
+    ├── stdout_stderr
+    |
+    └── performance
 
 Author: Serena G. Lotreck
 """
 import argparse
-from os.path import abspath, exists, basename, splitext
+from os.path import abspath, exists, basename, splitext, split
 from os import makedirs, walk, listdir
 import subprocess
 from random import randint
@@ -34,8 +46,28 @@ class ModelNotFoundError(Exception):
     pass
 
 
-def run_and_evaluate_models(model_paths, new_data_path,
-                            data_path, pure_path, out_loc,
+def evaluate_models(top_dir, data_path, out_prefix):
+    """
+    Runs the model evaluation script on model output.
+
+    parameters:
+        top_dir, str: path to top level output dir
+        data_path, str: path to data, must include gold standard
+            annotations
+        out_prefix, str: only evaluates files with this prefix
+
+    returns: None
+    """
+    save_name = f'{top_dir}/performance/{out_prefix}_model_performance.csv'
+    evaluate = [
+        "python",
+        abspath("../evaluate_model_output.py"), data_path, save_name,
+        f'{top_dir}/model_predictions/', '-use_prefix', out_prefix
+    ]
+    subprocess.run(evaluate)
+
+
+def run_models(model_paths, new_data_path, pure_path, top_dir,
                             out_prefix, num_runs):
     """
     Runs and evaluates models. Evaluates between each run in order to
@@ -46,9 +78,8 @@ def run_and_evaluate_models(model_paths, new_data_path,
         model_paths, dict: keys are (model name, ent/rel), values are
             paths to zip files of models
         new_data_path, str: path to properly formatted dev.json
-        data_path, str: path to original dataset, for evaluation
         pure_path, str: path to PURE directory
-        out_loc, str: path to save evaluation outputs
+        top_dir, str: path to top directory for output file structure
         num_runs, int: number of times to run the models
     
     returns: None
@@ -58,8 +89,8 @@ def run_and_evaluate_models(model_paths, new_data_path,
         verboseprint(f'On model {model_name_tup[0]} for {model_name_tup[1]}s.')
         
         # Unzip model
-        print(model_path)
-        unzip = f'unzip {model_path}'
+        unzip_path = split(model_path)[0]
+        unzip = f'unzip {model_path} -d {unzip_path}'
         subprocess.run(unzip, shell=True)
         unzipped_model_path = model_path[:-4]
         
@@ -74,7 +105,7 @@ def run_and_evaluate_models(model_paths, new_data_path,
             # Run model
             model_run = (f'python {pure_path}/run_entity.py --do_eval '
                         f'--context_window 0 --task {task} --data_dir '
-                        f'{out_loc} --model {model_name_tup[0]} '
+                        f'{top_dir} --model {model_name_tup[0]} '
                         f'--output_dir {unzipped_model_path}')
             out = subprocess.run(model_run, capture_output=True, shell=True)
 
@@ -83,32 +114,28 @@ def run_and_evaluate_models(model_paths, new_data_path,
             stderr_s = out.stderr.decode("utf-8")
 
             # Save stdout
-            stdout_loc = f'{out_loc}/{out_prefix}_model_runs_stdout_stderr.txt'
+            stdout_loc = f'{top_dir}/stdout_stderr/{out_prefix}_model_runs_stdout_stderr.txt'
             with open(stdout_loc, 'w') as myf:
                 myf.write('====> STDOUT <====\n\n')
                 myf.write(stdout_s)
                 myf.write('\n\n====> STDERR <====\n\n')
                 myf.write(stderr_s)
-
-            # Evaluate
-            save_name = f'{out_loc}/{out_prefix}_run_{i}_model_performance.csv'
-            evaluate = [
-                "python",
-                abspath("../evaluate_model_output.py"), data_path, save_name,
-                unzipped_model_path, '-use_prefix', out_prefix
-            ]
-            subprocess.run(evaluate)
+                
+            # Copy model output with out_prefix to output directory
+            new_name = f'{top_dir}/model_predictions/{out_prefix}_run_{i}_pure_{task}_output.jsonl'
+            copy = f'cp {unzipped_model_path}/ent_pred_dev.json {new_name}'
+            subprocess.run(copy, shell=True)
             
 
-def format_data(data_path, out_loc):
+def format_data(data_path, top_dir):
     """
     Make a new copy of the data on which to run the models, removing
     or adding an empty set of annotation fields, and removing the
-    dataset name. Saves new copy as dev.json in out_loc.
+    dataset name. Saves new copy as dev.json in top_dir.
     
     parameters:
         data_path, str: path to data file
-        out_loc, str: place to save modified file copy
+        top_dir, str: path to top directory for output file structure
         
     returns:
         new_data_path, str: path to newly saved copy
@@ -125,7 +152,7 @@ def format_data(data_path, out_loc):
             # Add to list for new doc
             mod_data.append(obj)
             
-    new_data_path = f'{out_loc}/dev.json'
+    new_data_path = f'{top_dir}/formatted_data/dev.json'
     with jsonlines.open(new_data_path, 'w') as writer:
         writer.write_all(mod_data)
 
@@ -170,19 +197,19 @@ def check_models(to_check):
     return model_paths_dict
             
             
-def check_prefix(out_loc, out_prefix):
+def check_prefix(top_dir, out_prefix):
     """
     Checks if any files in the tree exist with the same file prefix, in order
     to prevent files from being overwritten. Raises an exception if any files
     are found with that prefix.
 
     parameters:
-        out_loc, str: path to save output files
+        top_dir, str: path to top directory for output file structure
         out_prefix, str: string to be prepended to all output files
 
     returns: None
     """
-    for path, currentdir, files in walk(out_loc):
+    for path, currentdir, files in walk(top_dir):
         for f in files:
             if f.startswith(out_prefix):
                 raise PrefixError(
@@ -191,11 +218,59 @@ def check_prefix(out_loc, out_prefix):
                 )
 
                 
-def main(data_path, pure_path, out_loc, out_prefix, model_path, num_runs):
+def check_make_filetree(top_dir):
+    """
+    Checks if the top_dir exists already, as well as the correct
+    subdirectories. Creates any missing directories.
+
+    parameters:
+        top_dir, str: path to top directory for output file structure
+
+    returns: True if top_dir exists, False otherwise
+    """
+    # Check if top_dir exists
+    if exists(top_dir):
+
+        # If it does, check for correct subdirectories
+        formatted_data_path = f'{top_dir}/formatted_data'
+        if not exists(formatted_data_path):
+            makedirs(formatted_data_path)
+
+        model_predictions_path = f'{top_dir}/model_predictions'
+        if not exists(model_predictions_path):
+            makedirs(model_predictions_path)
+
+        allennlp_output_path = f'{top_dir}/stdout_stderr'
+        if not exists(allennlp_output_path):
+            makedirs(allennlp_output_path)
+
+        performance_path = f'{top_dir}/performance'
+        if not exists(performance_path):
+            makedirs(performance_path)
+
+        return True
+
+    else:
+
+        makedirs(top_dir)
+        makedirs(f'{top_dir}/formatted_data')
+        makedirs(f'{top_dir}/model_predictions')
+        makedirs(f'{top_dir}/stdout_stderr')
+        makedirs(f'{top_dir}/performance')
+
+        return False
+
+                
+def main(data_path, pure_path, top_dir, out_prefix, model_path, num_runs):
+    
+    # Check if the top_dir & other folders exist already
+    verboseprint('\nChecking if file tree exists and creating it if not...')
+    existed = check_make_filetree(top_dir)
     
     # Make sure no files with the same prefix exist
     verboseprint('\nMaking sure no files with the given prefix exist...')
-    check_prefix(out_loc, out_prefix)
+    if existed:
+        check_prefix(top_dir, out_prefix)
         
     # Check that the models exist, raise excpetion if not
     verboseprint('\nMaking sure all models are downloaded...')
@@ -207,13 +282,16 @@ def main(data_path, pure_path, out_loc, out_prefix, model_path, num_runs):
     
     # Format data
     verboseprint('\nFormatting data...')
-    new_data_path = format_data(data_path, out_loc)
+    new_data_path = format_data(data_path, top_dir)
     
     # Run models
-    verboseprint('\nRunning and evaluating models...')
-    run_and_evaluate_models(model_paths, new_data_path,
-                            data_path, pure_path, out_loc,
+    verboseprint('\nRunning models...')
+    run_models(model_paths, new_data_path, pure_path, top_dir,
                             out_prefix, num_runs)
+    
+    # Evaluate models
+    verboseprint('\nEvaluating models...')
+    evaluate_models(top_dir, data_path, out_prefix)
     
     verboseprint('\n\nDone!\n\n')
 
@@ -227,8 +305,11 @@ if __name__ == "__main__":
                        'model performance.')
     parser.add_argument('pure_path', type=str,
                         help='Path to the PURE repository.')
-    parser.add_argument('out_loc', type=str,
-                        help='Path to save output files.')
+    parser.add_argument('top_dir', type=str,
+                        help='Path to save the output of this script. A new filetree will '
+        'be created here that includes sister dirs "formatted_data", '
+        '"model_predictions", and "performance". The directory specified '
+        'here can already exist, but will be created if it does not.')
     parser.add_argument(
         'out_prefix',
         type=str,
@@ -254,11 +335,11 @@ if __name__ == "__main__":
     
     args.data_path = abspath(args.data_path)
     args.pure_path = abspath(args.pure_path)
-    args.out_loc = abspath(args.out_loc)
+    args.top_dir = abspath(args.top_dir)
     if args.model_path != '':
         args.model_path = abspath(args.model_path)
         
     verboseprint = print if args.verbose else lambda *a, **k: None
     
-    main(args.data_path, args.pure_path, args.out_loc, args.out_prefix,
+    main(args.data_path, args.pure_path, args.top_dir, args.out_prefix,
          args.model_path, args.num_runs)
