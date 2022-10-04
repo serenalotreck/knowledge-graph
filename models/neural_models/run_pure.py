@@ -2,6 +2,10 @@
 Script to run PURE models. PURE repository and corresponding
 models must be downloaded with download_pure.sh before using.
 
+Need to be in a computing environment with access to GPU in
+order to run PURE models. NOTE TO SELF: Currently using a pure
+environment + dygie developed + jsonlines + pandas to run this.
+
 Takes DyGIE++ formatted data and removes the dataset field and
 blanks out annotation fields or adds empty ones. Renames the
 file to dev.json, which is required by PURE.
@@ -33,6 +37,7 @@ import argparse
 from os.path import abspath, exists, basename, splitext, split
 from os import makedirs, walk, listdir
 import subprocess
+from collections import OrderedDict
 from random import randint
 from tqdm import trange
 import jsonlines
@@ -84,6 +89,7 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
     
     returns: None
     """
+    prev_model_path = ''
     for model_name_tup, model_path in model_paths.items():
 
         verboseprint(f'On model {model_name_tup[0]} for {model_name_tup[1]}s.')
@@ -103,29 +109,45 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
             else: task = 'scierc'
                 
             # Run model
-            model_run = (f'python {pure_path}/run_entity.py --do_eval '
-                        f'--context_window 0 --task {task} --data_dir '
-                        f'{top_dir} --model {model_name_tup[0]} '
-                        f'--output_dir {unzipped_model_path}')
+            if model_name_tup[1] == 'ent':
+                model_run = (f'python {pure_path}/run_entity.py --do_eval '
+                            f'--context_window 0 --task {task} --data_dir '
+                            f'{top_dir}/formatted_data --model {model_name_tup[0]} '
+                            f'--output_dir {unzipped_model_path}')
+                
+            else: 
+                model_run = (f'python {pure_path}/run_relation.py --do_eval '
+                            f'--context_window 0 --entity_output_dir '
+                            f'{prev_model_path} --model {model_name_tup[0]} '
+                            f'--output_dir {unzipped_model_path}')
+                
             out = subprocess.run(model_run, capture_output=True, shell=True)
-
+            
             # Convert bytes to string so they can be written to a file
             stdout_s = out.stdout.decode("utf-8")
             stderr_s = out.stderr.decode("utf-8")
 
             # Save stdout
-            stdout_loc = f'{top_dir}/stdout_stderr/{out_prefix}_model_runs_stdout_stderr.txt'
-            with open(stdout_loc, 'w') as myf:
+            stdout_loc = (f'{top_dir}/stdout_stderr/'
+                          f'{out_prefix}_model_runs_stdout_stderr.txt')
+            with open(stdout_loc, 'a') as myf:
                 myf.write('====> STDOUT <====\n\n')
                 myf.write(stdout_s)
                 myf.write('\n\n====> STDERR <====\n\n')
                 myf.write(stderr_s)
                 
             # Copy model output with out_prefix to output directory
-            new_name = f'{top_dir}/model_predictions/{out_prefix}_run_{i}_pure_{task}_output.jsonl'
-            copy = f'cp {unzipped_model_path}/ent_pred_dev.json {new_name}'
+            if model_name_tup[1] == 'ent':
+                old_name = f'{unzipped_model_path}/ent_pred_dev.json'
+            else:
+                old_name = f'{unzipped_model_path}/predictions.json'
+            new_name = (f'{top_dir}/model_predictions'
+                        f'/{out_prefix}_run_{i}_pure_{task}_output.jsonl')
+            copy = f'cp {old_name} {new_name}'
             subprocess.run(copy, shell=True)
             
+        prev_model_path = unzipped_model_path
+        
 
 def format_data(data_path, top_dir):
     """
@@ -171,12 +193,13 @@ def check_models(to_check):
         model_paths_dict, dict: keys are (model_name, rel/ent),
             values are paths to model zip files
     """
-    model_paths_dict = {}
+    model_paths_dict = OrderedDict()
     for model_dir in ['ace05', 'scierc']:
         if model_dir == 'ace05':
             model_paths = [f'{to_check}/{model_dir}/ent-alb-ctx100.zip',
                            f'{to_check}/{model_dir}/rel-alb-ctx100.zip']
-            model_name_tups = [('albert-xxlarge-v1', 'ent'), ('albert-xxlarge-v1', 'rel')]
+            model_name_tups = [('albert-xxlarge-v1', 'ent'),
+                               ('albert-xxlarge-v1', 'rel')]
         else:
             model_paths = [f'{to_check}/{model_dir}/ent-scib-ctx300.zip',
                            f'{to_check}/{model_dir}/rel-scib-ctx100.zip']
@@ -185,8 +208,6 @@ def check_models(to_check):
             
         for model_name_tup, model_path in zip(model_name_tups, model_paths):
             if basename(model_path) not in listdir(f'{to_check}/{model_dir}'):
-                print(model_path)
-                print(listdir(f'{to_check}/{model_dir}'))
                 raise ModelNotFoundError(
                     'One or mode requested models has not '
                     'been downloaded. Please download '

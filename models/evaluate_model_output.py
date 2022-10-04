@@ -166,7 +166,7 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
     pred_dicts = sorted(pred_dicts, key=lambda d: d['doc_key'])
     
     # Bootstrap sampling
-    if boostrap:
+    if bootstrap:
         prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts, gold_std_dicts, num_boot)
 
         # Calculate confidence interval
@@ -193,7 +193,7 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         ]
 
 
-def main(gold_standard, out_name, predictions, boostrap, num_boot):
+def main(gold_standard, out_name, predictions, bootstrap, num_boot):
 
     # Calculate performance
     verboseprint('\nCalculating performance...')
@@ -206,10 +206,14 @@ def main(gold_standard, out_name, predictions, boostrap, num_boot):
 
     # Make df
     verboseprint('\nMaking dataframe...')
+    if bootstrap:
+        cols = ['pred_file', 'gold_std_file', 'precision', 'recall', 'F1', 
+                 'precision_CI', 'recall_CI', 'F1_CI']
+    else:
+        cols = ['pred_file', 'gold_std_file', 'precision', 'recall', 'F1']
     df = pd.DataFrame(
         df_rows,
-        columns=['pred_file', 'gold_std_file', 'precision', 'recall', 'F1', 
-                 'precision_CI', 'recall_CI', 'F1_CI'])
+        columns=cols)
     verboseprint(f'Snapshot of dataframe:\n{df.head()}')
 
     # Save
@@ -233,7 +237,7 @@ if __name__ == "__main__":
         'prediction_dir',
         type=str,
         help='Path to directory with dygiepp-formatted model outputs')
-    parser.add_argument('--boostrap', action='store_true',
+    parser.add_argument('--bootstrap', action='store_true',
                         help='Whether or not to bootstrap a confidence interval '
                         'for performance metrics. Specify for deterministic model '
                         'output.')
