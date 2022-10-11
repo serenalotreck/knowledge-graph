@@ -44,7 +44,8 @@ def evaluate_models(top_dir, gold_standard, out_prefix):
     evaluate = [
         "python",
         abspath("../evaluate_model_output.py"), gold_standard, save_name,
-        f'{top_dir}/model_predictions/', '-use_prefix', out_prefix
+        f'{top_dir}/model_predictions/', '--bootstrap',
+        '-use_prefix', out_prefix
     ]
     subprocess.run(evaluate)
 
@@ -228,7 +229,7 @@ def check_make_filetree(top_dir):
         return False
 
 
-def main(top_dir, out_prefix, dygiepp_path, format_data, data, num_iter,
+def main(top_dir, out_prefix, dygiepp_path, format_data, data, 
          gold_standard, models_to_run):
 
     # Check if the top_dir & other folders exist already
@@ -261,7 +262,7 @@ def main(top_dir, out_prefix, dygiepp_path, format_data, data, num_iter,
     verboseprint('\nRunning models...')
     for model in models_to_run:
         verboseprint(f'Running model {model}...')
-        run_model(formatted_data_path, model, num_iter, dygiepp_path, top_dir,
+        run_model(formatted_data_path, model, dygiepp_path, top_dir,
                   out_prefix)
 
     # Evaluate
@@ -333,4 +334,4 @@ if __name__ == "__main__":
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     main(args.top_dir, args.out_prefix, args.dygiepp_path, args.format_data,
-         args.data, args.num_iter, args.gold_standard, args.models_to_run)
+         args.data,  args.gold_standard, args.models_to_run)

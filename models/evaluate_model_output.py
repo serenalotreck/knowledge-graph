@@ -20,25 +20,27 @@ def calculate_CI(prec_samples, rec_samples, f1_samples):
     """
     Calculates CI from bootstrap samples using the percentile method with
     alpha = 0.05 (95% CI).
-    
+
     parameters:
         prec_samples, list of float: list of precision values for bootstraps
         rec_samples, list of float: list of recall values for bootstraps
         f1_samples, list of float: list of f1 values for bootstraps
-        
+
     returns:
         prec_CI, tuple of float: CI for precision
         rec_CI, tuple of float: CI for recall
         f1_CI, tuple of float: CI for F1 score
     """
+    alpha = 0.05
     CIs = {}
     for name, samp_set in {'prec_samples':prec_samples,
-                           'rec_samples':rec_samples, 'f1_samples':f1_samples}:
+                           'rec_samples':rec_samples,
+                           'f1_samples':f1_samples}.items():
         lower_bound = np.percentile(samp_set, 100*(alpha/2))
         upper_bound = np.percentile(samp_set, 100*(1-alpha/2))
         name = name.split('_')[0] + '_CI'
         CIs[name] = (lower_bound, upper_bound)
-        
+
     return CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']
 
 
@@ -104,12 +106,12 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
 def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
     """
     Draw bootsrtap samples.
-    
+
     parameters:
         pred_dicts, list of dict: dicts of model predictions
         gold_std_dicts, list of dict: dicts of gold standard annotations
         num_boot, int: number of bootstrap samples to draw
-        
+
     returns:
         prec_samples, list of float: list of precision values for bootstraps
         rec_samples, list of float: list of recall values for bootstraps
@@ -132,7 +134,7 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
         prec_samples.append(precision)
         rec_samples.append(recall)
         f1_samples.append(f1)
-        
+
     return prec_samples, rec_samples, f1_samples
 
 
@@ -164,10 +166,11 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
     # Sort the pred and gold lists by doc key to make sure they're in the same order
     gold_std_dicts = sorted(gold_std_dicts, key=lambda d: d['doc_key'])
     pred_dicts = sorted(pred_dicts, key=lambda d: d['doc_key'])
-    
+
     # Bootstrap sampling
     if bootstrap:
-        prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts, gold_std_dicts, num_boot)
+        prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts,
+                gold_std_dicts, num_boot)
 
         # Calculate confidence interval
         prec_CI, rec_CI, f1_CI = calculate_CI(prec_samples, rec_samples, f1_samples)
@@ -181,7 +184,7 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
             basename(pred_file),
             basename(gold_std_file), precision, recall, f1, prec_CI, rec_CI, f1_CI
         ]
-    
+
     else:
         # Calculate performance
         predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)

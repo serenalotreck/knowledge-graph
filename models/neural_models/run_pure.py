@@ -9,13 +9,13 @@ environment + dygie developed + jsonlines + pandas to run this.
 Takes DyGIE++ formatted data and removes the dataset field and
 blanks out annotation fields or adds empty ones. Renames the
 file to dev.json, which is required by PURE.
-    
+
 NOTE: PURE doesn't offer an option to direct where the output is
 saved, and instead requires the model directory to be specified
 as the output directory, and saves results there. Additionally,
 there is no option to change the name of the output files, so the
 outputs will be overwritten every time the model is run. For this
-reason, PURE output files are copied with the out_prefix to the 
+reason, PURE output files are copied with the out_prefix to the
 out_loc directory with the number of the run, so that all results
 are accessible, and the evaluation is performed from there.
 
@@ -63,11 +63,13 @@ def evaluate_models(top_dir, data_path, out_prefix):
 
     returns: None
     """
-    save_name = f'{top_dir}/performance/{out_prefix}_model_performance.csv'
+    save_name = (f'{top_dir}/performance/{out_prefix}'
+            '_model_performance.csv')
     evaluate = [
         "python",
         abspath("../evaluate_model_output.py"), data_path, save_name,
-        f'{top_dir}/model_predictions/', '-use_prefix', out_prefix
+        f'{top_dir}/model_predictions/', '-use_prefix', out_prefix,
+        '--bootstrap'
     ]
     subprocess.run(evaluate)
 
@@ -75,10 +77,9 @@ def evaluate_models(top_dir, data_path, out_prefix):
 def run_models(model_paths, new_data_path, pure_path, top_dir,
                             out_prefix, num_runs):
     """
-    Runs and evaluates models. Evaluates between each run in order to
-    circumvent the outputs being overwritten. Unzips model files and
+    Runs models. Unzips model files and
     doesn't delete unzipped directories.
-    
+
     parameters:
         model_paths, dict: keys are (model name, ent/rel), values are
             paths to zip files of models
@@ -86,43 +87,43 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
         pure_path, str: path to PURE directory
         top_dir, str: path to top directory for output file structure
         num_runs, int: number of times to run the models
-    
+
     returns: None
     """
     prev_model_path = ''
     for model_name_tup, model_path in model_paths.items():
 
         verboseprint(f'On model {model_name_tup[0]} for {model_name_tup[1]}s.')
-        
+
         # Unzip model
         unzip_path = split(model_path)[0]
         unzip = f'unzip {model_path} -d {unzip_path}'
         subprocess.run(unzip, shell=True)
         unzipped_model_path = model_path[:-4]
-        
+
         # Run and evaluate sequentially
         for i in range(num_runs):
-            
+
             # Get model task name
             if model_name_tup[0] == 'albert-xxlarge-v1':
                 task = 'ace05'
             else: task = 'scierc'
-                
+
             # Run model
             if model_name_tup[1] == 'ent':
                 model_run = (f'python {pure_path}/run_entity.py --do_eval '
                             f'--context_window 0 --task {task} --data_dir '
                             f'{top_dir}/formatted_data --model {model_name_tup[0]} '
                             f'--output_dir {unzipped_model_path}')
-                
-            else: 
+
+            else:
                 model_run = (f'python {pure_path}/run_relation.py --do_eval '
                             f'--context_window 0 --entity_output_dir '
                             f'{prev_model_path} --model {model_name_tup[0]} '
-                            f'--output_dir {unzipped_model_path}')
-                
+                            f'--output_dir {unzipped_model_path} --task {task}')
+
             out = subprocess.run(model_run, capture_output=True, shell=True)
-            
+
             # Convert bytes to string so they can be written to a file
             stdout_s = out.stdout.decode("utf-8")
             stderr_s = out.stderr.decode("utf-8")
@@ -135,7 +136,7 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
                 myf.write(stdout_s)
                 myf.write('\n\n====> STDERR <====\n\n')
                 myf.write(stderr_s)
-                
+
             # Copy model output with out_prefix to output directory
             if model_name_tup[1] == 'ent':
                 old_name = f'{unzipped_model_path}/ent_pred_dev.json'
@@ -145,20 +146,20 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
                         f'/{out_prefix}_run_{i}_pure_{task}_output.jsonl')
             copy = f'cp {old_name} {new_name}'
             subprocess.run(copy, shell=True)
-            
+
         prev_model_path = unzipped_model_path
-        
+
 
 def format_data(data_path, top_dir):
     """
     Make a new copy of the data on which to run the models, removing
     or adding an empty set of annotation fields, and removing the
     dataset name. Saves new copy as dev.json in top_dir.
-    
+
     parameters:
         data_path, str: path to data file
         top_dir, str: path to top directory for output file structure
-        
+
     returns:
         new_data_path, str: path to newly saved copy
     """
@@ -173,7 +174,7 @@ def format_data(data_path, top_dir):
             obj['relations'] = empty
             # Add to list for new doc
             mod_data.append(obj)
-            
+
     new_data_path = f'{top_dir}/formatted_data/dev.json'
     with jsonlines.open(new_data_path, 'w') as writer:
         writer.write_all(mod_data)
@@ -205,7 +206,7 @@ def check_models(to_check):
                            f'{to_check}/{model_dir}/rel-scib-ctx100.zip']
             model_name_tups = [('allenai/scibert_scivocab_uncased', 'ent'),
                                ('allenai/scibert_scivocab_uncased', 'rel')]
-            
+
         for model_name_tup, model_path in zip(model_name_tups, model_paths):
             if basename(model_path) not in listdir(f'{to_check}/{model_dir}'):
                 raise ModelNotFoundError(
@@ -214,10 +215,10 @@ def check_models(to_check):
                     'models and try again.')
             else:
                 model_paths_dict[model_name_tup] = model_path
-    
+
     return model_paths_dict
-            
-            
+
+
 def check_prefix(top_dir, out_prefix):
     """
     Checks if any files in the tree exist with the same file prefix, in order
@@ -238,7 +239,7 @@ def check_prefix(top_dir, out_prefix):
                     'exist in this file tree, please try again with a new prefix.'
                 )
 
-                
+
 def check_make_filetree(top_dir):
     """
     Checks if the top_dir exists already, as well as the correct
@@ -281,18 +282,18 @@ def check_make_filetree(top_dir):
 
         return False
 
-                
+
 def main(data_path, pure_path, top_dir, out_prefix, model_path, num_runs):
-    
+
     # Check if the top_dir & other folders exist already
     verboseprint('\nChecking if file tree exists and creating it if not...')
     existed = check_make_filetree(top_dir)
-    
+
     # Make sure no files with the same prefix exist
     verboseprint('\nMaking sure no files with the given prefix exist...')
     if existed:
         check_prefix(top_dir, out_prefix)
-        
+
     # Check that the models exist, raise excpetion if not
     verboseprint('\nMaking sure all models are downloaded...')
     if model_path == '':
@@ -300,26 +301,26 @@ def main(data_path, pure_path, top_dir, out_prefix, model_path, num_runs):
     else:
         to_check = model_path
     model_paths = check_models(to_check)
-    
+
     # Format data
     verboseprint('\nFormatting data...')
     new_data_path = format_data(data_path, top_dir)
-    
+
     # Run models
     verboseprint('\nRunning models...')
     run_models(model_paths, new_data_path, pure_path, top_dir,
                             out_prefix, num_runs)
-    
+
     # Evaluate models
     verboseprint('\nEvaluating models...')
     evaluate_models(top_dir, data_path, out_prefix)
-    
+
     verboseprint('\n\nDone!\n\n')
 
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run PURE models')
-    
+
     parser.add_argument('data_path', type=str,
                         help='Path to dygiepp-formatted data on which '
                         'to run model. Must include annotations to get '
@@ -351,16 +352,16 @@ if __name__ == "__main__":
         '--verbose',
         action='store_true',
         help='Whether or not to print updates as the script runs.')
-    
+
     args = parser.parse_args()
-    
+
     args.data_path = abspath(args.data_path)
     args.pure_path = abspath(args.pure_path)
     args.top_dir = abspath(args.top_dir)
     if args.model_path != '':
         args.model_path = abspath(args.model_path)
-        
+
     verboseprint = print if args.verbose else lambda *a, **k: None
-    
+
     main(args.data_path, args.pure_path, args.top_dir, args.out_prefix,
          args.model_path, args.num_runs)
