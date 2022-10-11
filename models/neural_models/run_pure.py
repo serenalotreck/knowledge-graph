@@ -75,7 +75,7 @@ def evaluate_models(top_dir, data_path, out_prefix):
 
 
 def run_models(model_paths, new_data_path, pure_path, top_dir,
-                            out_prefix, num_runs):
+                            out_prefix):
     """
     Runs models. Unzips model files and
     doesn't delete unzipped directories.
@@ -86,7 +86,6 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
         new_data_path, str: path to properly formatted dev.json
         pure_path, str: path to PURE directory
         top_dir, str: path to top directory for output file structure
-        num_runs, int: number of times to run the models
 
     returns: None
     """
@@ -101,51 +100,49 @@ def run_models(model_paths, new_data_path, pure_path, top_dir,
         subprocess.run(unzip, shell=True)
         unzipped_model_path = model_path[:-4]
 
-        # Run and evaluate sequentially
-        for i in range(num_runs):
 
-            # Get model task name
-            if model_name_tup[0] == 'albert-xxlarge-v1':
-                task = 'ace05'
-            else: task = 'scierc'
+        # Get model task name
+        if model_name_tup[0] == 'albert-xxlarge-v1':
+            task = 'ace05'
+        else: task = 'scierc'
 
-            # Run model
-            if model_name_tup[1] == 'ent':
-                model_run = (f'python {pure_path}/run_entity.py --do_eval '
-                            f'--context_window 0 --task {task} --data_dir '
-                            f'{top_dir}/formatted_data --model {model_name_tup[0]} '
-                            f'--output_dir {unzipped_model_path}')
+        # Run model
+        if model_name_tup[1] == 'ent':
+            model_run = (f'python {pure_path}/run_entity.py --do_eval '
+                        f'--context_window 0 --task {task} --data_dir '
+                        f'{top_dir}/formatted_data --model {model_name_tup[0]} '
+                        f'--output_dir {unzipped_model_path}')
 
-            else:
-                model_run = (f'python {pure_path}/run_relation.py --do_eval '
-                            f'--context_window 0 --entity_output_dir '
-                            f'{prev_model_path} --model {model_name_tup[0]} '
-                            f'--output_dir {unzipped_model_path} --task {task}')
+        else:
+            model_run = (f'python {pure_path}/run_relation.py --do_eval '
+                        f'--context_window 0 --entity_output_dir '
+                        f'{prev_model_path} --model {model_name_tup[0]} '
+                        f'--output_dir {unzipped_model_path} --task {task}')
 
-            out = subprocess.run(model_run, capture_output=True, shell=True)
+        out = subprocess.run(model_run, capture_output=True, shell=True)
 
-            # Convert bytes to string so they can be written to a file
-            stdout_s = out.stdout.decode("utf-8")
-            stderr_s = out.stderr.decode("utf-8")
+        # Convert bytes to string so they can be written to a file
+        stdout_s = out.stdout.decode("utf-8")
+        stderr_s = out.stderr.decode("utf-8")
 
-            # Save stdout
-            stdout_loc = (f'{top_dir}/stdout_stderr/'
-                          f'{out_prefix}_model_runs_stdout_stderr.txt')
-            with open(stdout_loc, 'a') as myf:
-                myf.write('====> STDOUT <====\n\n')
-                myf.write(stdout_s)
-                myf.write('\n\n====> STDERR <====\n\n')
-                myf.write(stderr_s)
+        # Save stdout
+        stdout_loc = (f'{top_dir}/stdout_stderr/'
+                      f'{out_prefix}_model_runs_stdout_stderr.txt')
+        with open(stdout_loc, 'a') as myf:
+            myf.write('====> STDOUT <====\n\n')
+            myf.write(stdout_s)
+            myf.write('\n\n====> STDERR <====\n\n')
+            myf.write(stderr_s)
 
-            # Copy model output with out_prefix to output directory
-            if model_name_tup[1] == 'ent':
-                old_name = f'{unzipped_model_path}/ent_pred_dev.json'
-            else:
-                old_name = f'{unzipped_model_path}/predictions.json'
-            new_name = (f'{top_dir}/model_predictions'
-                        f'/{out_prefix}_run_{i}_pure_{task}_output.jsonl')
-            copy = f'cp {old_name} {new_name}'
-            subprocess.run(copy, shell=True)
+        # Copy model output with out_prefix to output directory
+        if model_name_tup[1] == 'ent':
+            old_name = f'{unzipped_model_path}/ent_pred_dev.json'
+        else:
+            old_name = f'{unzipped_model_path}/predictions.json'
+        new_name = (f'{top_dir}/model_predictions'
+                    f'/{out_prefix}_pure_{task}_{model_name_tup[1]}_output.jsonl')
+        copy = f'cp {old_name} {new_name}'
+        subprocess.run(copy, shell=True)
 
         prev_model_path = unzipped_model_path
 
@@ -283,7 +280,7 @@ def check_make_filetree(top_dir):
         return False
 
 
-def main(data_path, pure_path, top_dir, out_prefix, model_path, num_runs):
+def main(data_path, pure_path, top_dir, out_prefix, model_path):
 
     # Check if the top_dir & other folders exist already
     verboseprint('\nChecking if file tree exists and creating it if not...')
@@ -309,7 +306,7 @@ def main(data_path, pure_path, top_dir, out_prefix, model_path, num_runs):
     # Run models
     verboseprint('\nRunning models...')
     run_models(model_paths, new_data_path, pure_path, top_dir,
-                            out_prefix, num_runs)
+                            out_prefix)
 
     # Evaluate models
     verboseprint('\nEvaluating models...')
@@ -343,10 +340,6 @@ if __name__ == "__main__":
                         'located somewhere else besides the pretrained_models '
                         'subdirectory of the PURE repository.',
                        default='')
-    parser.add_argument('-num_runs', type=int,
-                        help='Number of times to run and evaluate models. '
-                        'Default is 1.',
-                        default=1)
     parser.add_argument(
         '-v',
         '--verbose',
@@ -364,4 +357,4 @@ if __name__ == "__main__":
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     main(args.data_path, args.pure_path, args.top_dir, args.out_prefix,
-         args.model_path, args.num_runs)
+         args.model_path)
