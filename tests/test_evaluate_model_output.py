@@ -8,7 +8,37 @@ import sys
 
 sys.path.append('../models/')
 
+import numpy as np
 import evaluate_model_output as emo
+
+## Didn't write a test for drawing the samples,
+## since it just randomly selects and then uses other funcs
+## that already have tests
+
+class TestCalculateCI(unittest.TestCase):
+    def setUp(self):
+        self.prec_samples = [0.1,0.3,0.3,0.5,0.6,0.9]
+        self.rec_samples = [0.2,0.2,0.3,0.4,0.4,0.8]
+        self.f1_samples = [0.1,0.3,0.4,0.5,0.7,0.7]
+
+        # Calculated with same method as within func, feels un-kosher
+        a = 0.05
+        lower_p = 100*(a/2)
+        upper_p = 100*(1-a/2)
+        self.prec_CI = (np.percentile(self.prec_samples, lower_p),
+                np.percentile(self.prec_samples, upper_p))
+        self.rec_CI = (np.percentile(self.rec_samples, lower_p),
+                np.percentile(self.rec_samples, upper_p))
+        self.f1_CI = (np.percentile(self.f1_samples, lower_p),
+                np.percentile(self.f1_samples, upper_p))
+
+    def test_calculate_CI(self):
+        prec_CI, rec_CI, f1_CI = emo.calculate_CI(self.prec_samples,
+                self.rec_samples, self.f1_samples)
+
+        self.assertEqual(prec_CI, self.prec_CI)
+        self.assertEqual(rec_CI, self.rec_CI)
+        self.assertEqual(f1_CI, self.f1_CI)
 
 
 class TestGetF1Input(unittest.TestCase):
@@ -101,7 +131,7 @@ class TestGetF1Input(unittest.TestCase):
 
         self.assertEqual(gold, 4)
 
-    def test_get_f1_input_impoerfect_matched(self):
+    def test_get_f1_input_imperfect_matched(self):
 
         predicted, gold, matched = emo.get_f1_input(self.gold_std,
                                                     self.predictions_imperfect)
