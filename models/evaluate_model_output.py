@@ -44,10 +44,126 @@ def calculate_CI(prec_samples, rec_samples, f1_samples):
     return CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']
 
 
+def check_rel_matches(pred, gold_sent):
+    """
+    Checks for order-agnostic matches of pred in gold_sent.
+
+    Note that pred/gold are relative, can be swapped to get false negatives by
+    comparing a "pred" from the gold standard against the "gold_sent" of
+    predictions from the model, as is done in get_f1_input.
+
+    parameters:
+        pred, list: 4 integers (entity bounds) and a string (relation type)
+        gold_sent, list of list: internal lists are relation representations
+            with the same format as pred
+
+    returns:
+        True if an order-agnostic match exists in gold_sent, False otherwise
+    """
+    # Make all preds into strings of chars to make it easier to
+    # search for character pairs
+    gold_rel_strs = [' '.join([str(i) for i in gold_sent])]
+    # Make each ent in the predicted rel into a separate string so
+    # we can search order-agnostically
+    pred_ent_1_str = ' '.join([str(i) for i in pred[:2]])
+    pred_ent_2_str = ' '.join([str(i) for i in pred[2:]])
+    # Check if ent 1 is in one of the relations
+    ent1_list = [True for i in gold_rel_strs if pred_ent_1_str
+            in i else False]
+    # Check if ent 2 is in one of the relations
+    ent2_list = [True for i in gold_rel_strs if pred_ent_2_str in i
+            else False]
+    # Indices that both have True in them are matches
+    matches_list = [True for i in range(len(gold_rel_strs)) if
+            (ent1_list[i] & ent2_list[i]) else False]
+    # This should at maximum have one match, delete once you've
+    # written tests
+    assert matches_list.count(True) <= 1
+
+    # Determine return type
+    if matches_list.count(True) == 1:
+        return True
+    else:
+        return False
+
+
+def get_doc_ent_counts(doc, ent_pos_neg):
+    """
+    Get the true/false positives and false negatives for entity prediction for
+    a single document.
+
+    parameters:
+        doc, dict: dygiepp-formatted dictionary, with keys "predicted_ner" and
+            "ner"
+        ent_pos_neg, dict: keys are "tp", "fp", "fn". Should keep passing the
+            same object for each doc to get totals for the entire set of
+            documents.
+
+    returns:
+        ent_pos_neg, dict: updated match counts for entities
+    """
+    # Go through each sentence for entities
+    for pred_sent, gold_sent in zip(doc['predicted_ner'], gold_std['ner']):
+        # Iterate through predictions and check for them in gold standard
+        for pred in pred_sent:
+            if pred in gold_sent.values():
+                ent_pos_neg['tp'] += 1
+            else:
+                ent_pos_neg['fp'] += 1
+        # Iterate through gold standard and check for them in predictions
+        for gold in gold_sent:
+            if gold in pred_sent:
+                continue
+            else:
+                ent_pos_neg['fn'] += 1
+
+    return ent_pos_neg
+
+
+def get_doc_rel_counts(doc, rel_pos_neg):
+    """
+    Get the true/false positives and false negatives for relation prediction for
+    a single document.
+
+    parameters:
+        doc, dict: dygiepp-formatted dictionary, with keys "predicted_relations"
+            and "relations"
+        rel_pos_neg, dict: keys are "tp", "fp", "fn". Should keep passing the
+            same object for each doc to get totals for the entire set of
+            documents.
+
+    returns:
+        rel_pos_neg, dict: updated match counts for relations
+    """
+    # Go through each sentence for relations
+    for pred_sent, gold_sent in zip(doc['predicted_relations'],
+            gold_std['relations']):
+        # Iterate through the predictions and check for them in the gold
+        # standard. Need to allow for the relations to be in a different
+        # order than in the gold standard
+        for pred in pred_sent:
+            matched = check_rel_matches(pred, gold_sent)
+            if matched:
+                rel_pos_neg['tp'] += 1
+            else:
+                rel_pos_neg['fp'] += 1
+        # Iterate through gold standard and check for them in predictions.
+        # Still need to allow for the relations to be in a different order.
+        for gold in gold_sent:
+            matched = check_rel_matches(gold, pred_sent)
+            if matched:
+                continue
+            else:
+                rel_pos_neg['fn'] += 1
+
+    return rel_pos_neg
+
+
 def get_f1_input(gold_standard_dicts, prediction_dicts):
     """
     Get the number of true and false postives and false negatives for the
-    model to calculate the following inputs for compute_f1:
+    model to calculate the following inputs for compute_f1 for both entities
+    and relations:
         predicted = true positives + false positives
         gold = true positives + false negatives
         matched = true positives
@@ -57,20 +173,22 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
         prediction_dicts, list of dict: dygiepp formatted predictions
 
     returns:
-        predicted, int
-        gold, int
-        matched, int
+        predicted_ent, int
+        gold_ent, int
+        matched_ent, int
+        predicted_rel, int
+        gold_rel, int
+        matched_rel, int
     """
-    tp = 0
-    fp = 0
-    fn = 0
+    ent_pos_neg = {'tp':0, 'fp':0, 'fn':0}
+    rel_pos_neg = {'tp':0, 'fp':0, 'fn':0}
 
     # Rearrange gold standard so that it's a dict with keys that are doc_id's
     gold_standard_dict = {d['doc_key']: d for d in gold_standard_dicts}
 
     # Go through the docs
     for doc in prediction_dicts:
-        # Get the corresnponding gold standard
+        # Get the corresponding gold standard
         try:
             gold_std = gold_standard_dict[doc['doc_key']]
         except KeyError:
@@ -78,29 +196,20 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
                 f'Document {doc["doc_key"]} is not in the gold standard. '
                 'Skipping this document for performance calculation.')
             continue
-        # Go through each sentence
-        for sent1, sent2 in zip(doc['predicted_ner'], gold_std['ner']):
-            # Make the lists into a dict where the key is the sentence idx and
-            # the value is the start and end token indices
-            gold_sent = {i: l[:2] for i, l in enumerate(sent2)}
-            pred_sent = {i: l[:2] for i, l in enumerate(sent1)}
-            # Iterate through predictions and check for them in gold standard
-            for pred_idx, pred in pred_sent.items():
-                if pred in gold_sent.values():
-                    tp += 1
-                else:
-                    fp += 1
-            for gold_idx, gold in gold_sent.items():
-                if gold in pred_sent.values():
-                    continue
-                else:
-                    fn += 1
+        # Get tp/fp/fn counts for this document
+        ent_pos_neg = get_doc_ent_counts(doc, ent_pos_neg)
+        rel_pos_neg = get_doc_rel_counts(docm rel_pos_neg)
 
-    predicted = tp + fp
-    gold = tp + fn
-    matched = tp
 
-    return predicted, gold, matched
+    predicted_ent = ent_pos_neg['tp'] + ent_pos_neg['fp']
+    gold_ent = ent_pos_neg['tp'] + ent_pos_neg['fn']
+    matched_ent = ent_pos_neg['tp']
+    predicted_rel = rel_pos_neg['tp'] + rel_pos_neg['fp']
+    gold_rel = rel_pos_neg['tp'] + rel_pos_neg['fn']
+    matched_rel = rel_pos_neg['tp']
+
+    return (predicted_ent, gold_ent, matched_ent, predicted_rel, gold_rel,
+                matched_rel)
 
 
 def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
