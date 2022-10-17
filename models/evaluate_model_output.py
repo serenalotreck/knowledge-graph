@@ -62,20 +62,23 @@ def check_rel_matches(pred, gold_sent):
     """
     # Make all preds into strings of chars to make it easier to
     # search for character pairs
-    gold_rel_strs = [' '.join([str(i) for i in gold_sent])]
+    gold_rel_strs = []
+    for rel in gold_sent:
+        rel_str = ' '.join([str(i) for i in rel[:4]])
+        gold_rel_strs.append(rel_str)
     # Make each ent in the predicted rel into a separate string so
     # we can search order-agnostically
     pred_ent_1_str = ' '.join([str(i) for i in pred[:2]])
-    pred_ent_2_str = ' '.join([str(i) for i in pred[2:]])
+    pred_ent_2_str = ' '.join([str(i) for i in pred[2:4]])
     # Check if ent 1 is in one of the relations
-    ent1_list = [True for i in gold_rel_strs if pred_ent_1_str
-            in i else False]
+    ent1_list = [True if pred_ent_1_str
+            in i else False for i in gold_rel_strs]
     # Check if ent 2 is in one of the relations
-    ent2_list = [True for i in gold_rel_strs if pred_ent_2_str in i
-            else False]
+    ent2_list = [True if pred_ent_2_str in i
+            else False for i in gold_rel_strs]
     # Indices that both have True in them are matches
-    matches_list = [True for i in range(len(gold_rel_strs)) if
-            (ent1_list[i] & ent2_list[i]) else False]
+    matches_list = [True if (ent1_list[i] & ent2_list[i]) else False
+            for i in range(len(gold_rel_strs))]
     # This should at maximum have one match, delete once you've
     # written tests
     assert matches_list.count(True) <= 1
@@ -87,7 +90,7 @@ def check_rel_matches(pred, gold_sent):
         return False
 
 
-def get_doc_ent_counts(doc, ent_pos_neg):
+def get_doc_ent_counts(doc, gold_std, ent_pos_neg):
     """
     Get the true/false positives and false negatives for entity prediction for
     a single document.
@@ -95,6 +98,8 @@ def get_doc_ent_counts(doc, ent_pos_neg):
     parameters:
         doc, dict: dygiepp-formatted dictionary, with keys "predicted_ner" and
             "ner"
+        gold_std, dict, dygiepp-formatted dicitonary with gold standard for
+            this doc, same key requirements as doc
         ent_pos_neg, dict: keys are "tp", "fp", "fn". Should keep passing the
             same object for each doc to get totals for the entire set of
             documents.
@@ -106,21 +111,28 @@ def get_doc_ent_counts(doc, ent_pos_neg):
     for pred_sent, gold_sent in zip(doc['predicted_ner'], gold_std['ner']):
         # Iterate through predictions and check for them in gold standard
         for pred in pred_sent:
-            if pred in gold_sent.values():
-                ent_pos_neg['tp'] += 1
-            else:
+            found = False
+            for gold_ent in gold_sent:
+                print('just the indices:')
+                print(pred[:2], gold_ent[:2])
+                if pred[:2] == gold_ent[:2]:
+                    ent_pos_neg['tp'] += 1
+            if not found:
                 ent_pos_neg['fp'] += 1
+            print(f'found? {found}')
         # Iterate through gold standard and check for them in predictions
         for gold in gold_sent:
-            if gold in pred_sent:
-                continue
-            else:
+            found = False
+            for pred in pred_sent:
+                if gold[:2] == pred[:2]:
+                    found = True
+            if not found:
                 ent_pos_neg['fn'] += 1
 
     return ent_pos_neg
 
 
-def get_doc_rel_counts(doc, rel_pos_neg):
+def get_doc_rel_counts(doc, gold_std, rel_pos_neg):
     """
     Get the true/false positives and false negatives for relation prediction for
     a single document.
@@ -128,6 +140,8 @@ def get_doc_rel_counts(doc, rel_pos_neg):
     parameters:
         doc, dict: dygiepp-formatted dictionary, with keys "predicted_relations"
             and "relations"
+        gold_std, dict, dygiepp-formatted dicitonary with gold standard for
+            this doc, same key requirements as doc
         rel_pos_neg, dict: keys are "tp", "fp", "fn". Should keep passing the
             same object for each doc to get totals for the entire set of
             documents.
@@ -197,8 +211,8 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
                 'Skipping this document for performance calculation.')
             continue
         # Get tp/fp/fn counts for this document
-        ent_pos_neg = get_doc_ent_counts(doc, ent_pos_neg)
-        rel_pos_neg = get_doc_rel_counts(docm rel_pos_neg)
+        ent_pos_neg = get_doc_ent_counts(doc, gold_std, ent_pos_neg)
+        rel_pos_neg = get_doc_rel_counts(doc, gold_std, rel_pos_neg)
 
 
     predicted_ent = ent_pos_neg['tp'] + ent_pos_neg['fp']

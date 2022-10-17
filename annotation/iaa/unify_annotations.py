@@ -74,8 +74,58 @@ def unify_ents(overlap, annotator_paths, iaa_dir_name, out_path):
         with open(f'{out_path}/{f_root}.ann', 'w') as myf:
             myf.write(ann_str)
 
-def unify_rels():
-    pass
+
+def unify_rels(overlap, annotator_paths, iaa_dir_name, out_path):
+    """
+    Function to unify relation annotations. Importantly, assumes that the Arg
+    numbers (the ID's of the entities) are the same across all documents. If
+    they aren't, semantically identical relations where the entities just have
+    different ID's will all appear in the final document. Copies entity
+    annotations over from the first annotator, so if entities are not the same
+    across all annotators, may result in relations pointing to non-existent
+    entities in the final documents.
+
+    parameters:
+        overlap, set of str: a set of the files to unify
+        annotator_paths, list of str: paths for each annotator
+        iaa_dir_name, str: name of the dire annotators have in common
+        out_path, str: where to save the unified files
+    """
+    # Make a .ann file for each .txt doc with all of the annotations
+    for f in overlap:
+        ann_str = ''
+        rel_num = 0
+        for i, annotator_path in enumerate(annotator_paths):
+            f_root = splitext(f)[0]
+            with open(f'{annotator_path}/{iaa_dir_name}/{f_root}.ann') as myf:
+                current_ann_lines = myf.readlines()
+            ent_str = ''
+            for line in current_ann_lines:
+                line_elts = line.split('\t')
+                if line_elts[0][0] == 'T':
+                    if i == 0:
+                        ent_str += line
+                elif line_elts[0][0] == 'R':
+                    # Replace the entity number in the ID
+                    rel_num += 1
+                    line_elts[0] = f'R{rel_num}'
+                    line = '\t'.join(line_elts)
+                    # Check if this relation already exists in the same form
+                    form = '\t'.join(line_elts[1:]) # Ignore the ID
+                    if form in ann_str:
+                        continue
+                    else:
+                    # Make sure the previous one ended with a newline
+                        if rel_num > 1:
+                            try:
+                                assert ann_str[-1] == '\n'
+                            except AssertionError:
+                                ann_str += '\n'
+                        ann_str += line
+            ann_str += ent_str
+
+        with open(f'{out_path}/{f_root}.ann', 'w') as myf:
+            myf.write(ann_str)
 
 
 def main(project_root, iaa_dir_name, unify_type, out_loc):
@@ -101,7 +151,7 @@ def main(project_root, iaa_dir_name, unify_type, out_loc):
     if unify_type == "ent":
         unify_ents(overlap, annotator_paths, iaa_dir_name, out_path)
     else:
-        unify_rels()
+        unify_rels(overlap, annotator_paths, iaa_dir_name, out_path)
 
 
 if __name__ == "__main__":
