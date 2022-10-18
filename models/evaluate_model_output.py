@@ -113,13 +113,11 @@ def get_doc_ent_counts(doc, gold_std, ent_pos_neg):
         for pred in pred_sent:
             found = False
             for gold_ent in gold_sent:
-                print('just the indices:')
-                print(pred[:2], gold_ent[:2])
                 if pred[:2] == gold_ent[:2]:
                     ent_pos_neg['tp'] += 1
+                    found = True
             if not found:
                 ent_pos_neg['fp'] += 1
-            print(f'found? {found}')
         # Iterate through gold standard and check for them in predictions
         for gold in gold_sent:
             found = False
@@ -213,7 +211,6 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
         # Get tp/fp/fn counts for this document
         ent_pos_neg = get_doc_ent_counts(doc, gold_std, ent_pos_neg)
         rel_pos_neg = get_doc_rel_counts(doc, gold_std, rel_pos_neg)
-
 
     predicted_ent = ent_pos_neg['tp'] + ent_pos_neg['fp']
     gold_ent = ent_pos_neg['tp'] + ent_pos_neg['fn']

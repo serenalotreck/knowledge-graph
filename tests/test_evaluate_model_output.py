@@ -357,7 +357,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(predicted_ent, self.imperf_pred_num_ent)
 
@@ -365,7 +365,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(gold_ent, self.imperf_gold_num_ent)
 
@@ -373,7 +373,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(matched_ent, self.imperf_matched_num_ent)
 
@@ -405,7 +405,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(predicted_rel, self.imperf_pred_num_rel)
 
@@ -413,7 +413,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(gold_rel, self.imperf_gold_num_rel)
 
@@ -421,7 +421,7 @@ class TestGetF1Input(unittest.TestCase):
 
         (predicted_ent, gold_ent, matched_ent,
                 predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+                                                    self.pred_imperf)
 
         self.assertEqual(matched_rel, self.imperf_matched_num_rel)
 
