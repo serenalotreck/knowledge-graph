@@ -331,99 +331,87 @@ class TestGetF1Input(unittest.TestCase):
 
     def test_get_f1_input_perfect_predicted_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'ent')
 
-        self.assertEqual(predicted_ent, self.perf_pred_num_ent)
+        self.assertEqual(predicted, self.perf_pred_num_ent)
 
     def test_get_f1_input_perfect_gold_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'ent')
 
-        self.assertEqual(gold_ent, self.perf_gold_num_ent)
+        self.assertEqual(gold, self.perf_gold_num_ent)
 
     def test_get_f1_input_perfect_matched_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'ent')
 
-        self.assertEqual(matched_ent, self.perf_matched_num_ent)
+        self.assertEqual(matched, self.perf_matched_num_ent)
 
     def test_get_f1_input_imperfect_predicted_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'ent')
 
-        self.assertEqual(predicted_ent, self.imperf_pred_num_ent)
+        self.assertEqual(predicted, self.imperf_pred_num_ent)
 
     def test_get_f1_input_imperfect_gold_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'ent')
 
-        self.assertEqual(gold_ent, self.imperf_gold_num_ent)
+        self.assertEqual(gold, self.imperf_gold_num_ent)
 
     def test_get_f1_input_imperfect_matched_ent(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'ent')
 
-        self.assertEqual(matched_ent, self.imperf_matched_num_ent)
+        self.assertEqual(matched, self.imperf_matched_num_ent)
 
     def test_get_f1_input_perfect_predicted_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'rel')
 
-        self.assertEqual(predicted_rel, self.perf_pred_num_rel)
+        self.assertEqual(predicted, self.perf_pred_num_rel)
 
     def test_get_f1_input_perfect_gold_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'rel')
 
-        self.assertEqual(gold_rel, self.perf_gold_num_rel)
+        self.assertEqual(gold, self.perf_gold_num_rel)
 
     def test_get_f1_input_perfect_matched_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_perf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_perf, 'rel')
 
-        self.assertEqual(matched_rel, self.perf_matched_num_rel)
+        self.assertEqual(matched, self.perf_matched_num_rel)
 
     def test_get_f1_input_imperfect_predicted_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'rel')
 
-        self.assertEqual(predicted_rel, self.imperf_pred_num_rel)
+        self.assertEqual(predicted, self.imperf_pred_num_rel)
 
     def test_get_f1_input_imperfect_gold_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'rel')
 
-        self.assertEqual(gold_rel, self.imperf_gold_num_rel)
+        self.assertEqual(gold, self.imperf_gold_num_rel)
 
     def test_get_f1_input_imperfect_matched_rel(self):
 
-        (predicted_ent, gold_ent, matched_ent,
-                predicted_rel, gold_rel, matched_rel) = emo.get_f1_input(self.gold_std,
-                                                    self.pred_imperf)
+        predicted, gold, matched = emo.get_f1_input(self.gold_std,
+                                                    self.pred_imperf, 'rel')
 
-        self.assertEqual(matched_rel, self.imperf_matched_num_rel)
+        self.assertEqual(matched, self.imperf_matched_num_rel)
 
 
 if __name__ == "__main__":

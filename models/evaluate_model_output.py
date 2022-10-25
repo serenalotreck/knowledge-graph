@@ -26,7 +26,7 @@ def calculate_CI(prec_samples, rec_samples, f1_samples):
         rec_samples, list of float: list of recall values for bootstraps
         f1_samples, list of float: list of f1 values for bootstraps
 
-    returns:
+    returns list with elements:
         prec_CI, tuple of float: CI for precision
         rec_CI, tuple of float: CI for recall
         f1_CI, tuple of float: CI for F1 score
@@ -41,7 +41,7 @@ def calculate_CI(prec_samples, rec_samples, f1_samples):
         name = name.split('_')[0] + '_CI'
         CIs[name] = (lower_bound, upper_bound)
 
-    return CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']
+    return [CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']]
 
 
 def check_rel_matches(pred, gold_sent):
@@ -171,7 +171,7 @@ def get_doc_rel_counts(doc, gold_std, rel_pos_neg):
     return rel_pos_neg
 
 
-def get_f1_input(gold_standard_dicts, prediction_dicts):
+def get_f1_input(gold_standard_dicts, prediction_dicts, input_type):
     """
     Get the number of true and false postives and false negatives for the
     model to calculate the following inputs for compute_f1 for both entities
@@ -183,17 +183,14 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
     parameters:
         gold_standard_dicts, list of dict: dygiepp formatted annotations
         prediction_dicts, list of dict: dygiepp formatted predictions
-
+        input_type, str: 'ent' or 'rel', determines which of the prediction
+            types will be evaluated
     returns:
-        predicted_ent, int
-        gold_ent, int
-        matched_ent, int
-        predicted_rel, int
-        gold_rel, int
-        matched_rel, int
+        predicted, int
+        gold, int
+        matched, int
     """
-    ent_pos_neg = {'tp':0, 'fp':0, 'fn':0}
-    rel_pos_neg = {'tp':0, 'fp':0, 'fn':0}
+    pos_neg = {'tp':0, 'fp':0, 'fn':0}
 
     # Rearrange gold standard so that it's a dict with keys that are doc_id's
     gold_standard_dict = {d['doc_key']: d for d in gold_standard_dicts}
@@ -209,21 +206,20 @@ def get_f1_input(gold_standard_dicts, prediction_dicts):
                 'Skipping this document for performance calculation.')
             continue
         # Get tp/fp/fn counts for this document
-        ent_pos_neg = get_doc_ent_counts(doc, gold_std, ent_pos_neg)
-        rel_pos_neg = get_doc_rel_counts(doc, gold_std, rel_pos_neg)
+        if input_type == 'ent':
+            pos_neg = get_doc_ent_counts(doc, gold_std, pos_neg)
 
-    predicted_ent = ent_pos_neg['tp'] + ent_pos_neg['fp']
-    gold_ent = ent_pos_neg['tp'] + ent_pos_neg['fn']
-    matched_ent = ent_pos_neg['tp']
-    predicted_rel = rel_pos_neg['tp'] + rel_pos_neg['fp']
-    gold_rel = rel_pos_neg['tp'] + rel_pos_neg['fn']
-    matched_rel = rel_pos_neg['tp']
+        elif input_type == 'rel':
+            pos_neg = get_doc_rel_counts(doc, gold_std, pos_neg)
 
-    return (predicted_ent, gold_ent, matched_ent, predicted_rel, gold_rel,
-                matched_rel)
+    predicted = pos_neg['tp'] + pos_neg['fp']
+    gold = pos_neg['tp'] + pos_neg['fn']
+    matched = pos_neg['tp']
+
+    return (predicted, gold, matched)
 
 
-def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
+def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot, input_type):
     """
     Draw bootsrtap samples.
 
@@ -231,6 +227,7 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
         pred_dicts, list of dict: dicts of model predictions
         gold_std_dicts, list of dict: dicts of gold standard annotations
         num_boot, int: number of bootstrap samples to draw
+        input_type, str: 'ent' or 'rel'
 
     returns:
         prec_samples, list of float: list of precision values for bootstraps
@@ -245,17 +242,17 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot):
         pred_samp = np.random.choice(pred_dicts, size=len(pred_dicts), replace=True)
         # Get indices of the sampled instances in the pred_dicts list
         idx_list = [pred_dicts.index(i) for i in pred_samp]
-        # Since the two lists are sorted the same, can use indices to get equivalent docs in gold std
+        # Since the lists are sorted the same, can use indices to get equivalent docs in gold std
         gold_samp = np.array([gold_std_dicts[i] for i in idx_list])
         # Calculate performance for the sample
-        predicted, gold, matched = get_f1_input(gold_samp, pred_samp)
-        precision, recall, f1 = compute_f1(predicted, gold, matched)
+        pred, gold, match = get_f1_input(gold_samp, pred_samp, input_type)
+        prec, rec, f1 = compute_f1(pred, gold, match)
         # Append each of the performance values to their respective sample lists
-        prec_samples.append(precision)
-        rec_samples.append(recall)
+        prec_samples.append(prec)
+        rec_samples.append(rec)
         f1_samples.append(f1)
 
-    return prec_samples, rec_samples, f1_samples
+    return (prec_samples, rec_samples, f1_samples)
 
 
 def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
@@ -269,9 +266,10 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         num_boot, int: if bootstrap is True, how many bootstrap samples to take
 
     returns:
-        row, list: [pred file name, gold std file name, precision, recall, f1]
-            if bootstrap is false, same columns plus [prec_CI, rec_CI, f1_CI]
-            if bootstrap is true
+        row, list: [pred file name, gold std file name, ent/rel_precision,
+            ent/rel_recall, ent/rel_f1] if bootstrap is false, same columns
+            plus [ent/rel_prec_CI, ent/rel_rec_CI, ent/rel_f1_CI] if bootstrap
+            is true
     """
     # Read in the files
     gold_std_dicts = []
@@ -287,33 +285,56 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
     gold_std_dicts = sorted(gold_std_dicts, key=lambda d: d['doc_key'])
     pred_dicts = sorted(pred_dicts, key=lambda d: d['doc_key'])
 
+    # Check if the predictions include relations
+    pred_rels = True
+    try:
+        [d['predicted_relations'] for d in pred_dicts]
+    except KeyError:
+        pred_rels = False
+
     # Bootstrap sampling
     if bootstrap:
-        prec_samples, rec_samples, f1_samples = draw_boot_samples(pred_dicts,
-                gold_std_dicts, num_boot)
+        ent_boot_samples = draw_boot_samples(pred_dicts,
+                                    gold_std_dicts, num_boot, 'ent')
+        if pred_rels:
+            rel_boot_samples = draw_boot_samples(pred_dicts,
+                                    gold_std_dicts, num_boot, 'rel')
 
         # Calculate confidence interval
-        prec_CI, rec_CI, f1_CI = calculate_CI(prec_samples, rec_samples, f1_samples)
+        ent_CIs = calculate_CI(ent_boot_samples[0], ent_boot_samples[1],
+                ent_boot_samples[2])
+
+        if pred_rels:
+            rel_CIs = calculate_CI(rel_boot_samples[0],  rel_boot_samples[1],
+                    rel_boot_samples[2])
+        else:
+            rel_CIs = [np.nan for i in range(3)]
 
         # Get means
-        precision = np.mean(prec_samples)
-        recall = np.mean(rec_samples)
-        f1 = np.mean(f1_samples)
+        ent_means = [np.mean(samp) for samp in ent_boot_samples]
+        if pred_rels:
+            rel_means = [np.mean(samp) for samp in rel_boot_samples]
+        else:
+            rel_means = [np.nan for i in range(3)]
 
         return [
             basename(pred_file),
-            basename(gold_std_file), precision, recall, f1, prec_CI, rec_CI, f1_CI
-        ]
+            basename(gold_std_file)] + ent_means + ent_CIs + rel_means + rel_CIs
 
     else:
         # Calculate performance
-        predicted, gold, matched = get_f1_input(gold_std_dicts, pred_dicts)
-        precision, recall, f1 = compute_f1(predicted, gold, matched)
+        pred_ent, gold_ent, match_ent = get_f1_input(gold_samp, pred_samp, 'ent')
+        ent_means = compute_f1(pred_ent, gold_ent, match_ent)
+        if pred_rels:
+            pred_rel, gold_rel, match_rel = get_f1_input(gold_samp, pred_samp,
+                    'rel')
+            rel_means = compute_f1(pred_rel, gold_rel, match_rel)
+        else:
+            rel_means = [np.nan for i in range(3)]
 
         return [
             basename(pred_file),
-            basename(gold_std_file), precision, recall, f1
-        ]
+            basename(gold_std_file)] + ent_means + rel_means
 
 
 def main(gold_standard, out_name, predictions, bootstrap, num_boot):
@@ -330,10 +351,13 @@ def main(gold_standard, out_name, predictions, bootstrap, num_boot):
     # Make df
     verboseprint('\nMaking dataframe...')
     if bootstrap:
-        cols = ['pred_file', 'gold_std_file', 'precision', 'recall', 'F1', 
-                 'precision_CI', 'recall_CI', 'F1_CI']
+        cols = ['pred_file', 'gold_std_file', 'ent_precision', 'ent_recall',
+                'ent_F1', 'rel_precision', 'rel_precision', 'rel_f1',
+                'ent_precision_CI', 'ent_recall_CI', 'ent_F1_CI',
+                'rel_precision_CI', 'rel_recall_CI', 'rel_F1_CI']
     else:
-        cols = ['pred_file', 'gold_std_file', 'precision', 'recall', 'F1']
+        cols = ['pred_file', 'gold_std_file', 'ent_precision', 'ent_recall',
+                'ent_F1', 'rel_precision', 'rel_recall', 'rel_F1']
     df = pd.DataFrame(
         df_rows,
         columns=cols)
