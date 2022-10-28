@@ -9,6 +9,7 @@ Author: Serena G. Lotreck
 import argparse
 from os.path import abspath, basename, join
 from os import listdir
+import warnings
 
 from dygie.training.f1 import compute_f1  # Must have dygiepp developed in env
 import jsonlines
@@ -255,7 +256,7 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot, input_type):
     return (prec_samples, rec_samples, f1_samples)
 
 
-def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
+def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot, df_rows):
     """
     Gets performance metrics and returns as a list.
 
@@ -264,12 +265,11 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         gold_std_file, str: name of the gold standard file
         bootstrap, bool, whether or not to bootstrap a confidence interval
         num_boot, int: if bootstrap is True, how many bootstrap samples to take
+        df_rows, dict: keys are column names, values are lists of performance
+            values and CIs to which new results will be appended
 
     returns:
-        row, list: [pred file name, gold std file name, ent/rel_precision,
-            ent/rel_recall, ent/rel_f1] if bootstrap is false, same columns
-            plus [ent/rel_prec_CI, ent/rel_rec_CI, ent/rel_f1_CI] if bootstrap
-            is true
+        df_rows, dict: df_rows updated with new row values
     """
     # Read in the files
     gold_std_dicts = []
@@ -291,6 +291,17 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         [d['predicted_relations'] for d in pred_dicts]
     except KeyError:
         pred_rels = False
+
+    # Check if there are any relations in the gold standard
+    gold_rels = False
+    for doc in gold_std_dicts:
+        for sent in doc['relations']:
+            if len(sent) != 0:
+                gold_rels = True
+    if not gold_rels:
+        warnings.warn('\n\nThere are no gold standard relation annotations. '
+                'Performance values and CIs will be 0 for models that predict '
+                'relations, please disregard.')
 
     # Bootstrap sampling
     if bootstrap:
@@ -317,9 +328,23 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         else:
             rel_means = [np.nan for i in range(3)]
 
-        return [
-            basename(pred_file),
-            basename(gold_std_file)] + ent_means + ent_CIs + rel_means + rel_CIs
+        # Feels excessive but safer than returning a list, from experience
+        df_rows['pred_file'].append(basename(pred_file))
+        df_rows['gold_std_file'].append(basename(gold_std_file))
+        df_rows['ent_precision'].append(ent_means[0])
+        df_rows['ent_recall'].append(ent_means[1])
+        df_rows['ent_F1'].append(ent_means[2])
+        df_rows['rel_precision'].append(rel_means[0])
+        df_rows['rel_recall'].append(rel_means[1])
+        df_rows['rel_F1'].append(rel_means[2])
+        df_rows['ent_precision_CI'].append(ent_CIs[0])
+        df_rows['ent_recall_CI'].append(ent_CIs[1])
+        df_rows['ent_F1_CI'].append(ent_CIs[2])
+        df_rows['rel_precision_CI'].append(rel_CIs[0])
+        df_rows['rel_recall_CI'].append(rel_CIs[1])
+        df_rows['rel_F1_CI'].append(rel_CIs[2])
+
+        return df_rows
 
     else:
         # Calculate performance
@@ -332,32 +357,39 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot):
         else:
             rel_means = [np.nan for i in range(3)]
 
-        return [
-            basename(pred_file),
-            basename(gold_std_file)] + ent_means + rel_means
+        df_rows['pred_file'].append(basename(pred_file))
+        df_rows['gold_std_file'].append(basename(gold_std_file))
+        df_rows['ent_precision'].append(ent_means[0])
+        df_rows['ent_recall'].append(ent_means[1])
+        df_rows['ent_F1'].append(ent_means[2])
+        df_rows['rel_precision'].append(rel_means[0])
+        df_rows['rel_recall'].append(rel_means[1])
+        df_rows['rel_F1'].append(rel_means[2])
+
+        return df_rows
 
 
 def main(gold_standard, out_name, predictions, bootstrap, num_boot):
 
     # Calculate performance
     verboseprint('\nCalculating performance...')
-    df_rows = []
-    for model in predictions:
-        df_rows.append(get_performance_row(model, gold_standard,
-                                           bootstrap, num_boot))
-
-    verboseprint(df_rows)
-
-    # Make df
-    verboseprint('\nMaking dataframe...')
     if bootstrap:
         cols = ['pred_file', 'gold_std_file', 'ent_precision', 'ent_recall',
-                'ent_F1', 'rel_precision', 'rel_precision', 'rel_f1',
+                'ent_F1', 'rel_precision', 'rel_recall', 'rel_f1',
                 'ent_precision_CI', 'ent_recall_CI', 'ent_F1_CI',
                 'rel_precision_CI', 'rel_recall_CI', 'rel_F1_CI']
     else:
         cols = ['pred_file', 'gold_std_file', 'ent_precision', 'ent_recall',
                 'ent_F1', 'rel_precision', 'rel_recall', 'rel_F1']
+    df_rows = {k:[] for k in cols}
+    for model in predictions:
+        df_rows = get_performance_row(model, gold_standard,
+                                           bootstrap, num_boot, df_rows)
+
+    verboseprint(df_rows)
+
+    # Make df
+    verboseprint('\nMaking dataframe...')
     df = pd.DataFrame(
         df_rows,
         columns=cols)
