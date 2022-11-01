@@ -222,7 +222,7 @@ def get_f1_input(gold_standard_dicts, prediction_dicts, input_type):
 
 def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot, input_type):
     """
-    Draw bootsrtap samples.
+    Draw bootstrap samples.
 
     parameters:
         pred_dicts, list of dict: dicts of model predictions
@@ -375,7 +375,7 @@ def main(gold_standard, out_name, predictions, bootstrap, num_boot):
     verboseprint('\nCalculating performance...')
     if bootstrap:
         cols = ['pred_file', 'gold_std_file', 'ent_precision', 'ent_recall',
-                'ent_F1', 'rel_precision', 'rel_recall', 'rel_f1',
+                'ent_F1', 'rel_precision', 'rel_recall', 'rel_F1',
                 'ent_precision_CI', 'ent_recall_CI', 'ent_F1_CI',
                 'rel_precision_CI', 'rel_recall_CI', 'rel_F1_CI']
     else:
