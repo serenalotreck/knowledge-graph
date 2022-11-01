@@ -33,11 +33,12 @@ def get_gram_embeddings(dset1, dset2, word2vecs):
     # Sort them by dataset
     sep_vecs = {}
     for dset in [dset1, dset2]:
-        dset_combined_vocab = dset.vocab['unigrams'] + dset.vocab['bigrams'] \
-                + dset.vocab['trigrams']
-        dset_vecs = {k:vec for k, vec in vecs.items() if k in
+        dset_combined_vocab = list(dset.vocab['unigrams']) + \
+                list(dset.vocab['bigrams']) \
+                + list(dset.vocab['trigrams'])
+        dset_vecs = {k:vecs[k] for k in vecs.index_to_key if k in
                 dset_combined_vocab}
-        sep_vecs[dset.get_dset_name()] = dset_vecs
+        sep_vecs[dset.get_dataset_name()] = dset_vecs
 
     return sep_vecs
 
@@ -72,8 +73,8 @@ def quantify_out_of_vocab(dset1, dset2):
     for key in dset1_vocab.keys():
         oov_dset1 = dset1_vocab[key] - dset2_vocab[key]
         oov_dset2 = dset2_vocab[key] - dset1_vocab[key]
-        oovs[f'{key}_oov_{dset1_name}'] = oov_dset1
-        oovs[f'{key}_oov_{dset2_name}'] =  oov_dset2
+        oovs[f'{key}_oov_{dset1_name}'] = list(oov_dset1)
+        oovs[f'{key}_oov_{dset2_name}'] =  list(oov_dset2)
 
     # Get fraction
     oov_fracs = {}
@@ -152,6 +153,8 @@ if __name__ == "__main__":
             help='Path to save output')
     parser.add_argument('out_prefix', type=str,
             help='String to prepend to all output file names')
+    parser.add_argument('-v', '--verbose', action='store_true',
+             help='Whether or not to print updates to stdout')
 
     args = parser.parse_args()
 
@@ -160,5 +163,6 @@ if __name__ == "__main__":
     args.word2vecs = abspath(args.word2vecs)
     args.out_loc = abspath(args.out_loc)
 
+    verboseprint = print if args.verbose else lambda *a, **k: None
     main(args.dset1_name,  args.dset1, args.dset2_name, args.dset2,
             args.word2vecs, args.out_loc, args.out_prefix)
