@@ -9,38 +9,6 @@ from os.path import abspath
 
 import jsonlines
 from dataset import Dataset
-from gensim.models import KeyedVectors
-
-
-def get_gram_embeddings(dset1, dset2, word2vecs):
-    """
-    Sorts vordvectors from model into separate dicts for each dataset, and
-    combines them into a dict of dicts where they overall keys are the dataset
-    names.
-
-    parameters:
-        dset1, Dataset obj: obj for dataset1 with vocab already set
-        dset2, Dataset obj: obj for dataset2 with vocab already set
-        word2vecs, str: path to vectors from pretrained word2vec model
-
-    returns:
-        sep_vecs, dict of dict: keys are dset names, values are dicts where keys
-            are ngrams and values are their vectors
-    """
-    # Load vectors
-    vecs = KeyedVectors.load(word2vecs)
-
-    # Sort them by dataset
-    sep_vecs = {}
-    for dset in [dset1, dset2]:
-        dset_combined_vocab = list(dset.vocab['unigrams']) + \
-                list(dset.vocab['bigrams']) \
-                + list(dset.vocab['trigrams'])
-        dset_vecs = {k:vecs[k] for k in vecs.index_to_key if k in
-                dset_combined_vocab}
-        sep_vecs[dset.get_dataset_name()] = dset_vecs
-
-    return sep_vecs
 
 
 def quantify_out_of_vocab(dset1, dset2):
@@ -109,7 +77,7 @@ def read_dset(path, dset_name):
 
 
 def main(dset1_name, dset1_path, dset2_name, dset2_path,
-        word2vecs, out_loc, out_prefix):
+        out_loc, out_prefix):
 
     # Read in the datasets
     verboseprint('\nReading in the datasets...')
@@ -124,15 +92,6 @@ def main(dset1_name, dset1_path, dset2_name, dset2_path,
         writer.write([oov_fracs, oov])
     verboseprint('Saved out-of-vocabulary comparison as {oov_save_name}')
 
-    # Compare token embeddings
-    verboseprint('\nGetting uni-, bi-, and trigram embeddings...')
-    word_vecs = get_gram_embeddings(dset1, dset2, word2vecs)
-    word_vec_save_name = f'{out_loc}/{out_prefix}_word_vec_per_dset.jsonl'
-    with jsonlines.open(word_vec_save_name, mode='w') as writer:
-        writer.write(word_vecs)
-    verboseprint('Saved wordvec comparison as {word_vev_save_name}')
-    # Compare document embeddings
-    ## TODO
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -146,9 +105,6 @@ if __name__ == "__main__":
             help='String identifying dataset 2')
     parser.add_argument('dset2', type=str,
             help='Path to jsonl file containing the second dataset to compare')
-    parser.add_argument('word2vecs', type=str,
-            help='Path to vectors from pretrained word2vec model to use for '
-            'token embedding comparison')
     parser.add_argument('out_loc', type=str,
             help='Path to save output')
     parser.add_argument('out_prefix', type=str,
@@ -160,9 +116,8 @@ if __name__ == "__main__":
 
     args.dset1 = abspath(args.dset1)
     args.dset2 = abspath(args.dset2)
-    args.word2vecs = abspath(args.word2vecs)
     args.out_loc = abspath(args.out_loc)
 
     verboseprint = print if args.verbose else lambda *a, **k: None
     main(args.dset1_name,  args.dset1, args.dset2_name, args.dset2,
-            args.word2vecs, args.out_loc, args.out_prefix)
+             args.out_loc, args.out_prefix)
