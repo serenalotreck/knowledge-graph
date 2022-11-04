@@ -89,7 +89,7 @@ def main(dset1_name, dset1_path, dset2_name, dset2_path,
     oov, oov_fracs = quantify_out_of_vocab(dset1, dset2)
     oov_save_name = f'{out_loc}/{out_prefix}_oov_comparison.jsonl'
     with jsonlines.open(oov_save_name, mode='w') as writer:
-        writer.write([oov_fracs, oov])
+        writer.write_all([oov_fracs, oov])
     verboseprint('Saved out-of-vocabulary comparison as {oov_save_name}')
 
 
