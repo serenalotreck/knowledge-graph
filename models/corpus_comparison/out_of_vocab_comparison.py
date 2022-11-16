@@ -17,7 +17,6 @@ def quantify_out_of_vocab(dset1, dset2):
     the other. Calculates:
         * Fraction of dset1 that is OOV for dset2
         * Fraction of dset2 that is OOV for dset1
-        * TODO decide if there are other metrics I'd like to see
 
     parameters:
         dset1, Dataset obj: first dataset
@@ -49,9 +48,9 @@ def quantify_out_of_vocab(dset1, dset2):
     for key in oovs.keys():
         gram_num = key.split('_')[0]
         if dset1_name in key:
-            oov_frac = len(oovs[key])/len(dset1_vocab[gram_num])
-        elif dset2_name in key:
             oov_frac = len(oovs[key])/len(dset2_vocab[gram_num])
+        elif dset2_name in key:
+            oov_frac = len(oovs[key])/len(dset1_vocab[gram_num])
         oov_fracs[f'{key}_frac'] = oov_frac
 
     return oovs, oov_fracs
@@ -90,7 +89,7 @@ def main(dset1_name, dset1_path, dset2_name, dset2_path,
     oov_save_name = f'{out_loc}/{out_prefix}_oov_comparison.jsonl'
     with jsonlines.open(oov_save_name, mode='w') as writer:
         writer.write_all([oov_fracs, oov])
-    verboseprint('Saved out-of-vocabulary comparison as {oov_save_name}')
+    verboseprint(f'Saved out-of-vocabulary comparison as {oov_save_name}')
 
 
 if __name__ == "__main__":

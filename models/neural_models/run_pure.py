@@ -35,7 +35,7 @@ Author: Serena G. Lotreck
 """
 import argparse
 from os.path import abspath, exists, basename, splitext, split
-from os import makedirs, walk, listdir
+from os import makedirs, walk, listdir, rename
 import subprocess
 from collections import OrderedDict
 from random import randint
@@ -51,23 +51,31 @@ class ModelNotFoundError(Exception):
     pass
 
 
-def evaluate_models(top_dir, data_path, out_prefix):
+def evaluate_models(top_dir, gold_std_path, out_prefix):
     """
     Runs the model evaluation script on model output.
 
     parameters:
         top_dir, str: path to top level output dir
-        data_path, str: path to data, must include gold standard
-            annotations
+        gold_std_path, str: path to gold standard annotations
         out_prefix, str: only evaluates files with this prefix
 
     returns: None
     """
+    # Add additional prefix to only evaluate model outputs that have both
+    # entity and relation predictions
+    for f in listdir(f'{top_dir}/model_predictions/'):
+        if 'rel' in f:
+            new_name = f'combined_{f}'
+            rename(f'{top_dir}/model_predictions/{f}',
+                    f'{top_dir}/model_predictions/{new_name}')
+
+    out_prefix = f'combined_{out_prefix}'
     save_name = (f'{top_dir}/performance/{out_prefix}'
             '_model_performance.csv')
     evaluate = [
         "python",
-        abspath("../evaluate_model_output.py"), data_path, save_name,
+        abspath("../evaluate_model_output.py"), gold_std_path, save_name,
         f'{top_dir}/model_predictions/', '-use_prefix', out_prefix,
         '--bootstrap'
     ]
@@ -280,7 +288,7 @@ def check_make_filetree(top_dir):
         return False
 
 
-def main(data_path, pure_path, top_dir, out_prefix, model_path):
+def main(data_path, gold_std_path, pure_path, top_dir, out_prefix, model_path):
 
     # Check if the top_dir & other folders exist already
     verboseprint('\nChecking if file tree exists and creating it if not...')
@@ -310,7 +318,7 @@ def main(data_path, pure_path, top_dir, out_prefix, model_path):
 
     # Evaluate models
     verboseprint('\nEvaluating models...')
-    evaluate_models(top_dir, data_path, out_prefix)
+    evaluate_models(top_dir, gold_std_path, out_prefix)
 
     verboseprint('\n\nDone!\n\n')
 
@@ -320,8 +328,10 @@ if __name__ == "__main__":
 
     parser.add_argument('data_path', type=str,
                         help='Path to dygiepp-formatted data on which '
-                        'to run model. Must include annotations to get '
-                       'model performance.')
+                        'to run model')
+    parser.add_argument('gold_std_path', type=str,
+                        help='Path to gold standard annotations for '
+                        'evaluation')
     parser.add_argument('pure_path', type=str,
                         help='Path to the PURE repository.')
     parser.add_argument('top_dir', type=str,
@@ -349,6 +359,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     args.data_path = abspath(args.data_path)
+    args.gold_std_path = abspath(args.gold_std_path)
     args.pure_path = abspath(args.pure_path)
     args.top_dir = abspath(args.top_dir)
     if args.model_path != '':
@@ -356,5 +367,5 @@ if __name__ == "__main__":
 
     verboseprint = print if args.verbose else lambda *a, **k: None
 
-    main(args.data_path, args.pure_path, args.top_dir, args.out_prefix,
-         args.model_path)
+    main(args.data_path, args.gold_std_path, args.pure_path, args.top_dir,
+            args.out_prefix, args.model_path)

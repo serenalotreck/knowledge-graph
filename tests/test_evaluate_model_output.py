@@ -130,9 +130,80 @@ class TestGetDocEntCounts(unittest.TestCase):
 
         self.assertEqual(counts, self.doc2_imperf_dict)
 
+class TestEliminateRelDups(unittest.TestCase):
+    def setUp(self):
+
+        self.doc_key = 'doc_1'
+        self.sent_type = 'predictions'
+
+        # Note: have to compare outputs as sets, because the internal
+        # conversion to set destroys the order
+
+        # No duplicates
+        self.no_dup = [[1, 3, 5, 6, "hello-world"],
+                        [3, 4, 5, 6, "good-morning-world"]]
+        self.no_result = set([(1, 3, 5, 6, "hello-world"),
+                        (3, 4, 5, 6, "good-morning-world")])
+
+        # All duplicated
+        self.all_dup = [[1, 3, 5, 6, "hello-world"],
+                [1, 3, 5, 6, "hello-world"],
+                [3, 4, 5, 6, "good-morning-world"],
+                [3, 4, 5, 6, "good-morning-world"]]
+        self.all_result = set([(1, 3, 5, 6, "hello-world"),
+                (3, 4, 5, 6, "good-morning-world")])
+
+        # Only one duplicated
+        self.one_dup = [[1, 3, 5, 6, "hello-world"],
+                [1, 3, 5, 6, "hello-world"],
+                [3, 4, 5, 6, "good-morning-world"]]
+        self.one_result = set([(1, 3, 5, 6, "hello-world"),
+                (3, 4, 5, 6, "good-morning-world")])
+
+        # Same rel but different type
+        self.diff_dup = [[1, 3, 5, 6, "hello-world"],
+                [1, 3, 5, 6, "goodybe-world"],
+                [3, 4, 5, 6, "good-morning-world"]]
+        self.diff_result = set([(1, 3, 5, 6, "hello-world"),
+                (1, 3, 5, 6, "goodybe-world"),
+                (3, 4, 5, 6, "good-morning-world")])
+
+    def test_eliminate_rel_dups_no_dups(self):
+        result = emo.eliminate_rel_dups(self.no_dup, self.doc_key,
+                self.sent_type)
+
+        result = set([tuple(i) for i in result])
+
+        self.assertEqual(result, self.no_result)
+
+    def test_eliminate_rel_dups_all_dup(self):
+        result = emo.eliminate_rel_dups(self.all_dup, self.doc_key,
+                self.sent_type)
+
+        result = set([tuple(i) for i in result])
+
+        self.assertEqual(result, self.all_result)
+
+    def test_eliminate_rel_dups_one_dup(self):
+        result = emo.eliminate_rel_dups(self.one_dup, self.doc_key,
+                self.sent_type)
+
+        result = set([tuple(i) for i in result])
+
+        self.assertEqual(result, self.one_result)
+
+    def test_eliminate_rel_dups_diff_dup(self):
+        result = emo.eliminate_rel_dups(self.diff_dup, self.doc_key,
+                self.sent_type)
+
+        result = set([tuple(i) for i in result])
+
+        self.assertEqual(result, self.diff_result)
+
 
 class TestCheckRelMatches(unittest.TestCase):
     def setUp(self):
+
         # No matches
         self.inc_pred = [1, 3, 5, 6, "hello-world"]
         self.inc_gold = [[1, 2, 6, 7, "goodbye-world"],
@@ -149,6 +220,7 @@ class TestCheckRelMatches(unittest.TestCase):
         self.corr_result = True
 
         # Matches out of order
+        ## TODO make sure this is actually what we want
         self.out_pred = [5, 6, 1, 3, "hello-world"]
         self.out_result = True
 
@@ -234,19 +306,19 @@ class TestGetDocRelCounts(unittest.TestCase):
 
     def test_get_doc_rel_counts_perfect(self):
         counts = emo.get_doc_rel_counts(self.doc_pred_perf, self.gold,
-                {'tp':0, 'fp':0, 'fn':0})
+                {'tp':0, 'fp':0, 'fn':0}, self.doc_pred_perf["doc_key"])
 
         self.assertEqual(counts, self.doc_perf_dict)
 
     def test_get_doc_rel_counts_imperf(self):
         counts = emo.get_doc_rel_counts(self.doc_pred_imperf, self.gold,
-                {'tp':0, 'fp':0, 'fn':0})
+                {'tp':0, 'fp':0, 'fn':0}, self.doc_pred_imperf["doc_key"])
 
         self.assertEqual(counts, self.doc_imperf_dict)
 
     def test_get_doc_rel_counts_none(self):
         counts = emo.get_doc_rel_counts(self.doc_pred_none, self.gold,
-                {'tp':0, 'fp':0, 'fn':0})
+                {'tp':0, 'fp':0, 'fn':0}, self.doc_pred_none["doc_key"])
 
         self.assertEqual(counts, self.doc_none_dict)
 

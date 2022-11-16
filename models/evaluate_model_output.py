@@ -45,6 +45,39 @@ def calculate_CI(prec_samples, rec_samples, f1_samples):
     return [CIs['prec_CI'], CIs['rec_CI'], CIs['f1_CI']]
 
 
+def eliminate_rel_dups(sent, doc_key, sent_type):
+    """
+    Remove duplicates from relations and warn.
+
+    Motivation for this function is that some models make exact duplicate
+    relation predictions for some reason. Removing them doesn't impact
+    prediction, because (a) for telling whether something has been identified
+    as a true positive, we only need to know that it was present once, and (b)
+    in terms of false positives, if two predictions are identical, it doesn't
+    make sense to count them as two separate false positive predictions,
+    especially since the softmax scores from the moedl are identical, making
+    it seem like they're not true multiple predictions and just got duplicated
+    somewhere downstream.
+
+    parameters:
+        sent, list of list: each internal list is a relation
+        doc_key, str: doc ID to use in warning
+        sent_type, str: either "prediction" or "gold standard", what document
+            set the sentence came from, to use in warning
+
+    returns:
+        sent, list of list: The sent but without duplicates
+    """
+    aset = set([tuple(rel) for rel in sent])
+    if len(sent) != len(aset):
+        warnings.warn(f'\nAt least one sentence in {doc_key}\'s {sent_type} '
+                'for this model contains exact duplicates. These will be '
+                'ignored when calculating performance.')
+        sent = [list(rel) for rel in aset]
+
+    return sent
+
+
 def check_rel_matches(pred, gold_sent):
     """
     Checks for order-agnostic matches of pred in gold_sent.
@@ -61,7 +94,7 @@ def check_rel_matches(pred, gold_sent):
     returns:
         True if an order-agnostic match exists in gold_sent, False otherwise
     """
-    # Make all preds into strings of chars to make it easier to
+    # Make all gold rels into strings of chars to make it easier to
     # search for character pairs
     gold_rel_strs = []
     for rel in gold_sent:
@@ -80,10 +113,8 @@ def check_rel_matches(pred, gold_sent):
     # Indices that both have True in them are matches
     matches_list = [True if (ent1_list[i] & ent2_list[i]) else False
             for i in range(len(gold_rel_strs))]
-    # This should at maximum have one match, delete once you've
-    # written tests
+    # This should at maximum have one match
     assert matches_list.count(True) <= 1
-
     # Determine return type
     if matches_list.count(True) == 1:
         return True
@@ -131,7 +162,7 @@ def get_doc_ent_counts(doc, gold_std, ent_pos_neg):
     return ent_pos_neg
 
 
-def get_doc_rel_counts(doc, gold_std, rel_pos_neg):
+def get_doc_rel_counts(doc, gold_std, rel_pos_neg, doc_key):
     """
     Get the true/false positives and false negatives for relation prediction for
     a single document.
@@ -144,6 +175,8 @@ def get_doc_rel_counts(doc, gold_std, rel_pos_neg):
         rel_pos_neg, dict: keys are "tp", "fp", "fn". Should keep passing the
             same object for each doc to get totals for the entire set of
             documents.
+        doc_key, str: doc ID, to use for warning if there are exact duplicate
+            relations in any of the sentences
 
     returns:
         rel_pos_neg, dict: updated match counts for relations
@@ -151,6 +184,9 @@ def get_doc_rel_counts(doc, gold_std, rel_pos_neg):
     # Go through each sentence for relations
     for pred_sent, gold_sent in zip(doc['predicted_relations'],
             gold_std['relations']):
+        # Check for and eliminate duplicates, with warning
+        pred_sent = eliminate_rel_dups(pred_sent, doc_key, "predictions")
+        gold_sent = eliminate_rel_dups(gold_sent, doc_key, "gold standard")
         # Iterate through the predictions and check for them in the gold
         # standard. Need to allow for the relations to be in a different
         # order than in the gold standard
@@ -195,23 +231,16 @@ def get_f1_input(gold_standard_dicts, prediction_dicts, input_type):
 
     # Rearrange gold standard so that it's a dict with keys that are doc_id's
     gold_standard_dict = {d['doc_key']: d for d in gold_standard_dicts}
-
     # Go through the docs
     for doc in prediction_dicts:
         # Get the corresponding gold standard
-        try:
-            gold_std = gold_standard_dict[doc['doc_key']]
-        except KeyError:
-            verboseprint(
-                f'Document {doc["doc_key"]} is not in the gold standard. '
-                'Skipping this document for performance calculation.')
-            continue
+        gold_std = gold_standard_dict[doc['doc_key']]
         # Get tp/fp/fn counts for this document
         if input_type == 'ent':
             pos_neg = get_doc_ent_counts(doc, gold_std, pos_neg)
 
         elif input_type == 'rel':
-            pos_neg = get_doc_rel_counts(doc, gold_std, pos_neg)
+            pos_neg = get_doc_rel_counts(doc, gold_std, pos_neg, doc["doc_key"])
 
     predicted = pos_neg['tp'] + pos_neg['fp']
     gold = pos_neg['tp'] + pos_neg['fn']
@@ -238,12 +267,16 @@ def draw_boot_samples(pred_dicts, gold_std_dicts, num_boot, input_type):
     prec_samples = []
     rec_samples = []
     f1_samples = []
+
+    # Draw the boot samples
     for _ in range(num_boot):
         # Sample prediction dicts with replacement
-        pred_samp = np.random.choice(pred_dicts, size=len(pred_dicts), replace=True)
+        pred_samp = np.random.choice(pred_dicts,
+                size=len(pred_dicts), replace=True)
         # Get indices of the sampled instances in the pred_dicts list
         idx_list = [pred_dicts.index(i) for i in pred_samp]
-        # Since the lists are sorted the same, can use indices to get equivalent docs in gold std
+        # Since the lists are sorted the same, can use indices to get equivalent
+        # docs in gold std
         gold_samp = np.array([gold_std_dicts[i] for i in idx_list])
         # Calculate performance for the sample
         pred, gold, match = get_f1_input(gold_samp, pred_samp, input_type)
@@ -280,6 +313,17 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot, df_rows):
     with jsonlines.open(pred_file) as reader:
         for obj in reader:
             pred_dicts.append(obj)
+
+    # Make sure all prediction files are also in the gold standard
+    gold_doc_keys = [g['doc_key'] for g in gold_std_dicts]
+    for doc in pred_dicts:
+        if doc['doc_key'] in gold_doc_keys:
+            continue
+        else:
+            verboseprint(
+                f'Document {doc["doc_key"]} is not in the gold standard. '
+                'Skipping this document for performance calculation.')
+            _ = pred_dicts.remove(doc)
 
     # Sort the pred and gold lists by doc key to make sure they're in the same order
     gold_std_dicts = sorted(gold_std_dicts, key=lambda d: d['doc_key'])
@@ -348,10 +392,11 @@ def get_performance_row(pred_file, gold_std_file, bootstrap, num_boot, df_rows):
 
     else:
         # Calculate performance
-        pred_ent, gold_ent, match_ent = get_f1_input(gold_samp, pred_samp, 'ent')
+        pred_ent, gold_ent, match_ent = get_f1_input(gold_std_dicts, pred_dicts, 'ent')
         ent_means = compute_f1(pred_ent, gold_ent, match_ent)
         if pred_rels:
-            pred_rel, gold_rel, match_rel = get_f1_input(gold_samp, pred_samp,
+            pred_rel, gold_rel, match_rel = get_f1_input(gold_std_dicts,
+                    pred_dicts,
                     'rel')
             rel_means = compute_f1(pred_rel, gold_rel, match_rel)
         else:
@@ -383,10 +428,9 @@ def main(gold_standard, out_name, predictions, bootstrap, num_boot):
                 'ent_F1', 'rel_precision', 'rel_recall', 'rel_F1']
     df_rows = {k:[] for k in cols}
     for model in predictions:
+        verboseprint(f'\nEvaluating model predictions from file {model}...')
         df_rows = get_performance_row(model, gold_standard,
                                            bootstrap, num_boot, df_rows)
-
-    verboseprint(df_rows)
 
     # Make df
     verboseprint('\nMaking dataframe...')
