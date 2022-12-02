@@ -288,7 +288,8 @@ def check_make_filetree(top_dir):
         return False
 
 
-def main(data_path, gold_std_path, pure_path, top_dir, out_prefix, model_path):
+def main(data_path, gold_std_path, pure_path, top_dir, out_prefix, model_path,
+        format_data):
 
     # Check if the top_dir & other folders exist already
     verboseprint('\nChecking if file tree exists and creating it if not...')
@@ -308,12 +309,17 @@ def main(data_path, gold_std_path, pure_path, top_dir, out_prefix, model_path):
     model_paths = check_models(to_check)
 
     # Format data
-    verboseprint('\nFormatting data...')
-    new_data_path = format_data(data_path, top_dir)
+    if format_data:
+        verboseprint('\nFormatting data...')
+        new_data_path = format_data(data_path, top_dir)
+    else:
+        new_name = f'{top_dir}/formatted_data/dev.json'
+        copy = f'cp {data_path} {new_name}'
+        subprocess.run(copy, shell=True)
 
     # Run models
     verboseprint('\nRunning models...')
-    run_models(model_paths, new_data_path, pure_path, top_dir,
+    run_models(model_paths, data_path, pure_path, top_dir,
                             out_prefix)
 
     # Evaluate models
@@ -350,6 +356,10 @@ if __name__ == "__main__":
                         'located somewhere else besides the pretrained_models '
                         'subdirectory of the PURE repository.',
                        default='')
+    parser.add_argument('--format_data', action='store_true',
+            help='Whether or not to format the dataset. Necessary if the '
+            'dataset contains a "dataset" key, or is unlabeled and missing '
+            'the fields "ner" and "relations"')
     parser.add_argument(
         '-v',
         '--verbose',
@@ -368,4 +378,4 @@ if __name__ == "__main__":
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     main(args.data_path, args.gold_std_path, args.pure_path, args.top_dir,
-            args.out_prefix, args.model_path)
+            args.out_prefix, args.model_path, args.format_data)

@@ -113,10 +113,8 @@ def check_rel_matches(pred, gold_sent):
     # Indices that both have True in them are matches
     matches_list = [True if (ent1_list[i] & ent2_list[i]) else False
             for i in range(len(gold_rel_strs))]
-    # This should at maximum have one match
-    assert matches_list.count(True) <= 1
     # Determine return type
-    if matches_list.count(True) == 1:
+    if matches_list.count(True) >= 1:
         return True
     else:
         return False
