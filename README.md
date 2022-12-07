@@ -1,5 +1,7 @@
 # knowledge-graph
-Code for the project *Straying off-topic: Automated information extraction and knowledge graph construction in the plant sciences with out-of-domain pre-trained models*
+#### NOTE: From 07 December 2022, I am working in the subsetted repo, [pickle-corpus-code](https://github.com/serenalotreck/pickle-corpus-code)
+
+Code for the project ~~*Straying off-topic: Automated information extraction and knowledge graph construction in the plant sciences with out-of-domain pre-trained models*~~ *In a PICKLE: Entity and relation annotation guidelines for the molecular plant sciences
 
 ## Respository contents
 * `annotation`: Contains scripts for annotation-related tasks. These include utility scripts (`abstract_scripts`), experimental scripts (`verb_annotations`), scrupts to calulate IAA (`iaa`), and the most recent version of the `annotation.conf` files used for annotation in brat (`brat`)
